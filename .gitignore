@@ -9,3 +9,6 @@ build/
 tmp/
 uploads/
 compile_commands.json
+.env
+build_tests/
+config.json

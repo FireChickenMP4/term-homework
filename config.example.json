@@ -1,0 +1,37 @@
+{
+    "listeners": [
+        {
+            "address": "0.0.0.0",
+            "port": 8080
+        }
+    ],
+    "db_clients": [
+        {
+            "name": "default",
+            "rdbms": "mysql",
+            "host": "127.0.0.1",
+            "port": 3306,
+            "dbname": "lib",
+            "user": "lib",
+            "password": "lib",
+            "characterSet": "utf8mb4",
+            "connection_number": 1,
+            "timeout": 1.0
+        }
+    ],
+    "plugins": [
+        {
+            "name": "drogon::plugin::AccessLogger",
+            "config": {
+                "log_format": "$remote_addr $method $url $status $body_bytes_sent $processing_time"
+            }
+        }
+    ],
+    "max_connection_size": 100000,
+    "log": {
+        "log_path": "./",
+        "logfile_base_name": "lib",
+        "log_size_limit": 10485760,
+        "log_level": "INFO"
+    }
+}
