@@ -1,12 +1,14 @@
 #include "config.h"
 #include <cstdlib>
 
-static std::string env(const char* key, const std::string& def) {
+static std::string env(const char *key, const std::string &def)
+{
     auto v = std::getenv(key);
     return v ? v : def;
 }
 
-AppConfig& AppConfig::get() {
+AppConfig &AppConfig::get()
+{
     static AppConfig c;
     c.dbHost = env("DB_HOST", "127.0.0.1");
     c.dbPort = std::stoi(env("DB_PORT", "3306"));

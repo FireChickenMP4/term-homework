@@ -4,7 +4,8 @@
 #include <random>
 #include <sstream>
 
-static std::string generateSecret() {
+static std::string generateSecret()
+{
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, 15);
@@ -15,33 +16,40 @@ static std::string generateSecret() {
     return secret;
 }
 
-static std::string readEnvFile() {
+static std::string readEnvFile()
+{
     std::ifstream f(".env");
     std::string line;
-    while (std::getline(f, line)) {
+    while (std::getline(f, line))
+    {
         if (line.find("JWT_SECRET=") == 0)
             return line.substr(11);
     }
     return "";
 }
 
-static void writeEnvFile(const std::string& secret) {
+static void writeEnvFile(const std::string &secret)
+{
     std::ofstream f(".env", std::ios::app);
     // check if JWT_SECRET already in file
     std::ifstream in(".env");
     std::string line;
     while (std::getline(in, line))
-        if (line.find("JWT_SECRET=") == 0) return;
+        if (line.find("JWT_SECRET=") == 0)
+            return;
 
     f << "\nJWT_SECRET=" << secret << std::endl;
 }
 
-std::string getJwtSecret() {
+std::string getJwtSecret()
+{
     auto env = std::getenv("JWT_SECRET");
-    if (env && env[0]) return env;
+    if (env && env[0])
+        return env;
 
     auto file = readEnvFile();
-    if (!file.empty()) return file;
+    if (!file.empty())
+        return file;
 
     auto secret = generateSecret();
     writeEnvFile(secret);

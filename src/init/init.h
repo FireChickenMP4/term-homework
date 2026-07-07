@@ -2,8 +2,10 @@
 #include <drogon/HttpAppFramework.h>
 #include <drogon/plugins/AccessLogger.h>
 
-namespace Plugins {
-    inline void registerPlugins(drogon::HttpAppFramework& app) {
+namespace Plugins
+{
+    inline void registerPlugins(drogon::HttpAppFramework &app)
+    {
         // config.json 已有 plugins 配置时这里不重复添加
         Json::Value plugins;
         plugins[0]["name"] = "drogon::plugin::AccessLogger";
@@ -11,8 +13,9 @@ namespace Plugins {
     }
 }
 
-namespace Routes {
-    void registerRoutes(drogon::HttpAppFramework& app);
+namespace Routes
+{
+    void registerRoutes(drogon::HttpAppFramework &app);
 }
 
-void init(drogon::HttpAppFramework& app);
+void init(drogon::HttpAppFramework &app);

@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
 
-struct AppConfig {
+struct AppConfig
+{
     std::string dbHost;
     int dbPort;
     std::string dbUser;
@@ -10,5 +11,5 @@ struct AppConfig {
     std::string adminUsername;
     std::string adminPassword;
 
-    static AppConfig& get();
+    static AppConfig &get();
 };
