@@ -1,0 +1,11 @@
+[application]
+
+[web.app]
+title = "library-system-web"
+
+[web.resource]
+style = ["/assets/tailwind.css"]
+script = []
+
+[web.resource.dev]
+script = []
