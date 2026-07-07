@@ -14,6 +14,13 @@ void registerRoutes(drogon::HttpAppFramework& app) {
         callback(resp);
     });
 
+    // CORS preflight
+    app.registerHandler("/*",
+        [](const drogon::HttpRequestPtr&,
+           std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+        callback(drogon::HttpResponse::newHttpResponse());
+    }, {drogon::Options});
+
     registerBookRoutes(app);
     registerUserRoutes(app);
     registerLibRoutes(app);

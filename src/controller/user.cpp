@@ -41,13 +41,20 @@ void registerUserRoutes(drogon::HttpAppFramework& app) {
     app.registerHandler("/users/{id}",
         [](const drogon::HttpRequestPtr& req,
            std::function<void(const drogon::HttpResponsePtr&)>&& cb, int id) {
+        auto jwt = getCurrentUser(req);
+        if (jwt.isNull()) { cb(err("Unauthorized", 401)); return; }
+        int currentId = jwt["user_id"].asInt();
+        std::string currentPerm = jwt["permission"].asString();
+        if (currentId != id && currentPerm != "admin") {
+            cb(err("Forbidden", 403)); return;
+        }
         auto user = User::getById(id);
         Json::Value v;
         v["id"] = user.id;
         v["username"] = user.username;
         v["permission"] = user.permission == User::Permission::Admin ? "admin" : "user";
         cb(drogon::HttpResponse::newHttpJsonResponse(v));
-    }, {drogon::Get});
+    }, {drogon::Get, "AuthFilter"});
 
     app.registerHandler("/users/{id}",
         [](const drogon::HttpRequestPtr& req,
@@ -92,10 +99,16 @@ void registerUserRoutes(drogon::HttpAppFramework& app) {
         [](const drogon::HttpRequestPtr& req,
            std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
         auto json = req->getJsonObject();
-        auto perm = (*json)["permission"].asString() == "admin"
-                    ? User::Permission::Admin : User::Permission::User;
+        if (!json || !(*json).isMember("username") || !(*json).isMember("password")) {
+            cb(err("username and password required")); return;
+        }
+        try {
+            User::getByUsername((*json)["username"].asString());
+            cb(err("Username already exists")); return;
+        } catch (...) {}
         auto id = User::add((*json)["username"].asString(),
-                            (*json)["password"].asString(), perm);
+                            (*json)["password"].asString(),
+                            User::Permission::User);
         Json::Value v; v["id"] = id;
         auto resp = drogon::HttpResponse::newHttpJsonResponse(v);
         resp->setStatusCode(drogon::k201Created);

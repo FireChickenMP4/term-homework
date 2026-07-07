@@ -40,15 +40,13 @@ std::vector<Book> Book::getAll(int page, int limit) {
 }
 
 std::vector<Book> Book::search(const std::string& keyword) {
-    auto all = getAll();
-    if (keyword.empty()) return all;
+    if (keyword.empty()) return getAll();
+    auto kw = "%" + keyword + "%";
+    auto result = db()->execSqlSync(
+        "SELECT * FROM books WHERE name LIKE ? OR author LIKE ? OR description LIKE ?",
+        kw, kw, kw);
     std::vector<Book> books;
-    for (auto& b : all) {
-        if (b.name.find(keyword) != std::string::npos ||
-            b.author.find(keyword) != std::string::npos ||
-            b.description.find(keyword) != std::string::npos)
-            books.push_back(b);
-    }
+    for (auto& row : result) books.push_back(rowToBook(row));
     return books;
 }
 

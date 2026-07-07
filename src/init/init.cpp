@@ -57,6 +57,14 @@ void init(drogon::HttpAppFramework& app) {
         mysql_close(conn);
     }
 
+    // CORS
+    app.registerPostHandlingAdvice([](const drogon::HttpRequestPtr&,
+                                      const drogon::HttpResponsePtr& resp) {
+        resp->addHeader("Access-Control-Allow-Origin", "*");
+        resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    });
+
     // 加载 Drogon 配置（监听端口、DB连接池、日志等）
     std::ifstream f("config.json");
     if (f.good()) {
