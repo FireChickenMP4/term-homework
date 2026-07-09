@@ -8,12 +8,14 @@ RUN apt-get update && apt-get install -y \
     libssl-dev libjsoncpp-dev zlib1g-dev uuid-dev libmysqlclient-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone --depth 1 https://github.com/drogonframework/drogon /tmp/drogon \
-    && mkdir /tmp/drogon/build && cd /tmp/drogon/build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF \
-    && cmake --build . -j$(nproc) \
-    && cmake --install . \
-    && rm -rf /tmp/drogon
+RUN git clone --depth 1 --recurse-submodules https://github.com/drogonframework/drogon /tmp/drogon
+
+WORKDIR /tmp/drogon/build
+RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF
+RUN cmake --build . -j$(nproc)
+RUN cmake --install .
+
+WORKDIR /app
 
 # ============================================================
 # Stage 2 — Build backend (C++ / Drogon)
