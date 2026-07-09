@@ -17,29 +17,27 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      build: ${{ steps.check.outputs.build_any_changed }}
-      deploy: ${{ steps.check.outputs.deploy_any_changed }}
+      build: ${{ steps.build-changes.outputs.any_changed }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Check changed files
-        id: check
+      - name: Check build changes
+        id: build-changes
         uses: tj-actions/changed-files@v44
         with:
-          files_yaml: |
-            build:
-              - src/**
-              - frontend/**
-              - CMakeLists.txt
-              - Dockerfile
-              - .dockerignore
-            deploy:
-              - docker-compose.yml
-              - Caddyfile
+          files: |
+            src/**
+            frontend/**
+            CMakeLists.txt
+            Dockerfile
+            .dockerignore
+            .github/workflows/deploy.yml
 
   build:
     needs: [ changes ]
-    if: ${{ (github.event_name == 'workflow_dispatch' && !inputs.deploy_only) || (github.event_name == 'push' && needs.changes.outputs.build == 'true') }}
+    if: ${{ needs.changes.outputs.build == 'true' || (github.event_name == 'workflow_dispatch' && !github.event.inputs.deploy_only) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
