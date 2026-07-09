@@ -14,7 +14,7 @@ ENV PATH=${VCPKG_ROOT}:${PATH}
 RUN git clone https://github.com/microsoft/vcpkg ${VCPKG_ROOT} \
     && ${VCPKG_ROOT}/bootstrap-vcpkg.sh
 
-RUN ${VCPKG_ROOT}/vcpkg install drogon
+RUN ${VCPKG_ROOT}/vcpkg install drogon[mysql]
 
 WORKDIR /app
 COPY CMakeLists.txt .
