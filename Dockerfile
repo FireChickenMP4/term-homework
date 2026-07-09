@@ -1,32 +1,41 @@
 # ============================================================
-# Stage 1 — Build backend (C++ / Drogon via vcpkg)
+# Stage 1 — Build Drogon framework from source
+# ============================================================
+FROM ubuntu:22.04 AS drogon-builder
+
+RUN apt-get update && apt-get install -y \
+    build-essential cmake git pkg-config \
+    libssl-dev libjsoncpp-dev zlib1g-dev uuid-dev libmysqlclient-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 https://github.com/drogonframework/drogon /tmp/drogon \
+    && mkdir /tmp/drogon/build && cd /tmp/drogon/build \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF \
+    && cmake --build . -j$(nproc) \
+    && cmake --install . \
+    && rm -rf /tmp/drogon
+
+# ============================================================
+# Stage 2 — Build backend (C++ / Drogon)
 # ============================================================
 FROM ubuntu:22.04 AS backend-builder
 
+COPY --from=drogon-builder /usr/local /usr/local
+
 RUN apt-get update && apt-get install -y \
-    build-essential cmake git curl zip unzip tar pkg-config \
-    libssl-dev libmysqlclient-dev \
+    build-essential cmake pkg-config \
+    libssl-dev libjsoncpp-dev zlib1g-dev uuid-dev libmysqlclient-dev \
     && rm -rf /var/lib/apt/lists/*
-
-ENV VCPKG_ROOT=/opt/vcpkg
-ENV PATH=${VCPKG_ROOT}:${PATH}
-
-RUN git clone https://github.com/microsoft/vcpkg ${VCPKG_ROOT} \
-    && ${VCPKG_ROOT}/bootstrap-vcpkg.sh
-
-RUN ${VCPKG_ROOT}/vcpkg install drogon[mysql]
 
 WORKDIR /app
 COPY CMakeLists.txt .
 COPY src/ src/
-RUN cmake -B build -S . \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+RUN cmake -B build -S . -DCMAKE_BUILD_TYPE=Release \
     && cmake --build build -j$(nproc) \
     && cp build/src/main /library-server
 
 # ============================================================
-# Stage 2 — Build frontend (Rust / Dioxus WASM)
+# Stage 3 — Build frontend (Rust / Dioxus WASM)
 # ============================================================
 FROM rust:slim-bookworm AS frontend-builder
 
@@ -44,22 +53,21 @@ RUN cd frontend && dx build --platform web --release
 RUN cp -r frontend/target/dx/library-system-web/release/web/public /frontend-dist
 
 # ============================================================
-# Stage 3 — Runtime image
+# Stage 4 — Runtime image
 # ============================================================
 FROM ubuntu:22.04 AS runtime
 
 RUN apt-get update && apt-get install -y \
-    ca-certificates \
+    ca-certificates libmysqlclient-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=backend-builder /library-server /app/
-COPY --from=backend-builder /opt/vcpkg/installed/x64-linux/lib/*.so* /app/lib/
+COPY --from=drogon-builder /usr/local/lib /usr/local/lib/
 COPY --from=frontend-builder /frontend-dist /app/frontend/dist
 COPY docker-entrypoint.sh /app/
 COPY config.docker.json /app/config.json
 
-ENV LD_LIBRARY_PATH=/app/lib
-RUN ldconfig /app/lib
+RUN ldconfig
 
 WORKDIR /app
 RUN mkdir -p uploads/tmp
