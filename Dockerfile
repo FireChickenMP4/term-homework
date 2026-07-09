@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone --depth 1 https://github.com/drogonframework/drogon /tmp/drogon \
-    && cmake -B /tmp/drogon/build -DCMAKE_BUILD_TYPE=Release \
+    && cmake -S /tmp/drogon -B /tmp/drogon/build -DCMAKE_BUILD_TYPE=Release \
     && cmake --build /tmp/drogon/build -j$(nproc) \
     && cmake --install /tmp/drogon/build \
     && rm -rf /tmp/drogon
