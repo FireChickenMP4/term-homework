@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     libssl-dev libjsoncpp-dev zlib1g-dev uuid-dev libmysqlclient-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone --depth 1 --branch v1.10.0 https://github.com/drogonframework/drogon /tmp/drogon \
+RUN git clone --depth 1 https://github.com/drogonframework/drogon /tmp/drogon \
     && cmake -B /tmp/drogon/build -DCMAKE_BUILD_TYPE=Release \
     && cmake --build /tmp/drogon/build -j$(nproc) \
     && cmake --install /tmp/drogon/build \
