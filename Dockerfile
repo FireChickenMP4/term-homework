@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y \
     pkg-config libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN cargo install dioxus-cli
+RUN cargo install dioxus-cli --locked
 
 WORKDIR /app
 COPY frontend/ frontend/
@@ -49,18 +49,17 @@ RUN cp -r frontend/target/dx/library-system-web/release/web/public /frontend-dis
 FROM ubuntu:22.04 AS runtime
 
 RUN apt-get update && apt-get install -y \
-    ca-certificates libmysqlclient-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=backend-builder /library-server /app/
-COPY --from=backend-builder /opt/vcpkg/installed/x64-linux/lib/libdrogon* \
-    /opt/vcpkg/installed/x64-linux/lib/libtrantor* \
-    /app/lib/
+COPY --from=backend-builder /opt/vcpkg/installed/x64-linux/lib/*.so* /app/lib/
 COPY --from=frontend-builder /frontend-dist /app/frontend/dist
 COPY docker-entrypoint.sh /app/
 COPY config.docker.json /app/config.json
 
 ENV LD_LIBRARY_PATH=/app/lib
+RUN ldconfig /app/lib
 
 WORKDIR /app
 RUN mkdir -p uploads/tmp
