@@ -45,7 +45,9 @@ RUN apt-get update && apt-get install -y \
     pkg-config libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN cargo install dioxus-cli --locked
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    cargo install dioxus-cli --locked
 
 WORKDIR /app
 COPY frontend/ frontend/
@@ -60,7 +62,7 @@ RUN cp -r frontend/target/dx/library-system-web/release/web/public /frontend-dis
 FROM ubuntu:22.04 AS runtime
 
 RUN apt-get update && apt-get install -y \
-    ca-certificates libmysqlclient-dev \
+    ca-certificates libjsoncpp-dev libmysqlclient-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=backend-builder /library-server /app/
