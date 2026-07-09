@@ -85,7 +85,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           source: "docker-compose.yml,Caddyfile"
-          target: /root/lib-system/
+          target: "~/lib-system/"
           strip_components: 0
 
       - name: Deploy
@@ -95,8 +95,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            mkdir -p /root/lib-system
-            cd /root/lib-system
+            mkdir -p ~/lib-system
+            cd ~/lib-system
             docker compose pull
             docker compose up -d
             docker image prune -f
