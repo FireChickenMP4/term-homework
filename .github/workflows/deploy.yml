@@ -3,12 +3,43 @@ name: Build & Deploy
 on:
   push:
     branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      deploy_only:
+        description: "仅部署（跳过构建）"
+        type: boolean
+        default: false
 
 env:
   DOCKER_IMAGE: firechickenmp4/library-system
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.check.outputs.build }}
+      deploy: ${{ steps.check.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check changed files
+        id: check
+        uses: tj-actions/changed-files@v44
+        with:
+          files_yaml: |
+            build:
+              - src/**
+              - frontend/**
+              - CMakeLists.txt
+              - Dockerfile
+              - .dockerignore
+            deploy:
+              - docker-compose.yml
+              - Caddyfile
+
   build:
+    needs: [ changes ]
+    if: ${{ (github.event_name == 'workflow_dispatch' && !inputs.deploy_only) || (github.event_name == 'push' && needs.changes.outputs.build == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,21 +72,13 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    needs: build
+    needs: [ changes, build ]
+    if: ${{ !cancelled() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check changed files
-        id: changed
-        uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            docker-compose.yml
-            Caddyfile
-
       - name: Sync compose & caddy config
-        if: steps.changed.outputs.any_changed == 'true'
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -72,6 +95,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            mkdir -p /root/lib-system
             cd /root/lib-system
             docker compose pull
             docker compose up -d
