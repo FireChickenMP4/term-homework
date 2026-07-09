@@ -36,7 +36,7 @@ RUN cmake -B build -S . -DCMAKE_BUILD_TYPE=Release \
 # ============================================================
 # Stage 3 — Build frontend (Rust / Dioxus WASM)
 # ============================================================
-FROM rust:1.85-slim-bookworm AS frontend-builder
+FROM rust:slim-bookworm AS frontend-builder
 
 RUN cargo install dioxus-cli
 
