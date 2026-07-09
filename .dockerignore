@@ -10,7 +10,10 @@ tmp/
 .vscode/
 Makefile
 *.md
-*.sh
+start.sh
+start-db.sh
+run-tests.sh
+release.sh
 .env
 config.json
 config.example.json
