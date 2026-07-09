@@ -17,8 +17,8 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      build: ${{ steps.check.outputs.build }}
-      deploy: ${{ steps.check.outputs.deploy }}
+      build: ${{ steps.check.outputs.build_any_changed }}
+      deploy: ${{ steps.check.outputs.deploy_any_changed }}
     steps:
       - uses: actions/checkout@v4
 
