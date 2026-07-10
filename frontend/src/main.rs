@@ -40,8 +40,10 @@ fn main() {
 fn App() -> Element {
     // Provide global state and restore any saved session.
     let auth = state::provide_state();
+    let restored = use_signal(|| false);
 
     use_effect(move || {
+        if *restored.read() { return; }
         let mut auth = auth;
         if let Some(token) = auth.token_value() {
             spawn(async move {
@@ -50,10 +52,12 @@ fn App() -> Element {
                     Err(_) => token,
                 };
                 match api::me(&token).await {
-                    Ok(user) => auth.set_session(token, user),
+                    Ok(user) => { auth.set_session(token, user); restored.set(true); }
                     Err(_) => auth.logout(),
                 }
             });
+        } else {
+            restored.set(true);
         }
     });
 
