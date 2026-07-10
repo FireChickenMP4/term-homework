@@ -121,8 +121,8 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          source: "docker-compose.yml"
-          target: "~/lib-system/"
+          source: "docker-compose.yml,Caddyfile"
+          target: ~/lib-system/
           strip_components: 0
 
       - name: Deploy
@@ -132,7 +132,6 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            mkdir -p ~/lib-system
             cd ~/lib-system
             docker compose pull
             docker compose up -d

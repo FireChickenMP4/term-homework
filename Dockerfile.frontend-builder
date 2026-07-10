@@ -1,4 +1,0 @@
-FROM firechickenmp4/frontend-builder
-
-RUN apt-get update && apt-get install -y --no-install-recommends binaryen \
-    && rm -rf /var/lib/apt/lists/*

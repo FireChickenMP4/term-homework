@@ -5,13 +5,16 @@ FROM ubuntu:22.04 AS drogon-builder
 
 RUN apt-get update && apt-get install -y \
     build-essential cmake git pkg-config \
-    libssl-dev libjsoncpp-dev zlib1g-dev uuid-dev libmysqlclient-dev \
+    libssl-dev libjsoncpp-dev zlib1g-dev uuid-dev \
+    libmariadb-dev libmariadb-dev-compat \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone --depth 1 --recurse-submodules https://github.com/drogonframework/drogon /tmp/drogon
 
 WORKDIR /tmp/drogon/build
-RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF
+RUN cmake .. -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF \
+    -DCMAKE_INSTALL_PREFIX=/usr/local
 RUN cmake --build . -j$(nproc)
 RUN cmake --install .
 
@@ -26,7 +29,8 @@ COPY --from=drogon-builder /usr/local /usr/local
 
 RUN apt-get update && apt-get install -y \
     build-essential cmake pkg-config \
-    libssl-dev libjsoncpp-dev zlib1g-dev uuid-dev libmysqlclient-dev \
+    libssl-dev libjsoncpp-dev zlib1g-dev uuid-dev \
+    libmariadb-dev libmariadb-dev-compat \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -42,7 +46,7 @@ RUN cmake -B build -S . -DCMAKE_BUILD_TYPE=Release \
 FROM ubuntu:22.04 AS runtime
 
 RUN apt-get update && apt-get install -y \
-    ca-certificates libjsoncpp-dev libmysqlclient-dev \
+    ca-certificates libjsoncpp-dev libmariadb-dev-compat \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=backend /library-server /app/
