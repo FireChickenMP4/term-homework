@@ -166,7 +166,7 @@ jobs:
 
             # backend 有构建才拉新镜像，否则保持现有容器
             if [ -n "$TAG_BACKEND" ]; then
-              TAG=$TAG_BACKEND docker compose pull app || { TAG_BACKEND=latest; TAG=latest docker compose pull app; }
+              docker pull firechickenmp4/library-system:"$TAG_BACKEND" || { TAG_BACKEND=latest; docker pull firechickenmp4/library-system:latest; }
               docker tag firechickenmp4/library-system:"$TAG_BACKEND" firechickenmp4/library-system:latest 2>/dev/null || true
               TAG=$TAG_BACKEND docker compose up -d app
             else
@@ -175,7 +175,7 @@ jobs:
 
             # caddy 同理
             if [ -n "$TAG_CADDY" ]; then
-              TAG=$TAG_CADDY docker compose pull caddy || { TAG_CADDY=latest; TAG=latest docker compose pull caddy; }
+              docker pull firechickenmp4/lib-caddy:"$TAG_CADDY" || { TAG_CADDY=latest; docker pull firechickenmp4/lib-caddy:latest; }
               docker tag firechickenmp4/lib-caddy:"$TAG_CADDY" firechickenmp4/lib-caddy:latest 2>/dev/null || true
               TAG=$TAG_CADDY docker compose up -d caddy
             else
