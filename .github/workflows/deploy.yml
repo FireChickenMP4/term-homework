@@ -37,6 +37,7 @@ jobs:
               - frontend/**
               - Dockerfile.caddy
               - Caddyfile
+              - icp.html
               - .github/workflows/deploy.yml
 
   backend:
