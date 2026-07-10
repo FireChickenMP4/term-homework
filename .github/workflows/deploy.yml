@@ -73,12 +73,13 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          no-cache: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Print digest
         id: tag
         run: |
-          SHA_TAG=$(echo "${{ steps.meta.outputs.tags }}" | cut -d, -f1 | rev | cut -d: -f1 | rev)
+          SHA_TAG="${GITHUB_SHA::7}"
           echo "sha_tag=$SHA_TAG" >> $GITHUB_OUTPUT
           echo "## Backend image" >> $GITHUB_STEP_SUMMARY
           echo "tag: $SHA_TAG" >> $GITHUB_STEP_SUMMARY
@@ -122,9 +123,10 @@ jobs:
 
       - name: Print digest
         run: |
+          SHA_TAG="${GITHUB_SHA::7}"
           echo "## Caddy image" >> $GITHUB_STEP_SUMMARY
+          echo "tag: $SHA_TAG" >> $GITHUB_STEP_SUMMARY
           echo "digest: ${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
-          echo "tags: ${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
 
   deploy:
     needs: [ changes, backend, caddy ]

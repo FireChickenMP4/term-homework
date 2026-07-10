@@ -20,9 +20,15 @@ RUN curl -fsSLo /usr/local/bin/dx \
     && chmod +x /usr/local/bin/dx \
     || cargo install dioxus-cli --locked
 
-WORKDIR /app
-COPY frontend/ frontend/
+RUN rustup target add wasm32-unknown-unknown
 
+# 先复制清单文件，编译依赖（不改 Cargo.toml 就不重编）
+COPY frontend/Cargo.toml frontend/Cargo.lock frontend/
+RUN mkdir frontend/src && echo "fn main() {}" > frontend/src/main.rs && \
+    cd frontend && cargo build --release --target wasm32-unknown-unknown 2>/dev/null || true
+
+# 再复制源码，只编译项目自身代码
+COPY frontend/ frontend/
 RUN cd frontend && dx build --platform web --release && \
     cp -r target/dx/library-system-web/release/web/public /frontend-dist
 
