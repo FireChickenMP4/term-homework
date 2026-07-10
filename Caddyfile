@@ -15,6 +15,12 @@ www.firechickenmp4.top {
         reverse_proxy app:8808
     }
 
+    handle /introduction {
+        root * /usr/share/caddy
+        rewrite * /project-defense.html
+        file_server
+    }
+
     handle {
         root * /usr/share/caddy
         try_files {path} /index.html

@@ -41,3 +41,4 @@ FROM caddy:2
 
 COPY --from=caddy-builder /usr/bin/caddy /usr/bin/caddy
 COPY --from=frontend-builder /frontend-dist /usr/share/caddy
+COPY project-defense.html /usr/share/caddy/
