@@ -7,6 +7,11 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
+# 确保 MySQL 用户密码与当前配置一致（修复 volume 残留旧密码）
+mysql -u root -p"${MYSQL_ROOT_PASSWORD:-root}" -h "${DB_HOST:-db}" \
+  -e "ALTER USER IF EXISTS '${DB_USER:-lib}'@'%' IDENTIFIED WITH mysql_native_password BY '${DB_PASSWORD:-lib}'; FLUSH PRIVILEGES;" \
+  2>/dev/null || true
+
 # 从环境变量生成 config.json
 cat > config.json <<EOF
 {
