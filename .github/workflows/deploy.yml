@@ -187,4 +187,4 @@ jobs:
               -e "ALTER USER IF EXISTS '${DB_USER:-lib}'@'%' IDENTIFIED WITH mysql_native_password BY '${DB_PASSWORD:-lib}'; FLUSH PRIVILEGES;" \
               2>/dev/null || true
 
-            docker image prune -af
+
