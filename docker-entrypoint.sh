@@ -49,3 +49,4 @@ cat > config.json <<EOF
 EOF
 
 exec ./library-server
+ 
