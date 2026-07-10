@@ -158,11 +158,17 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd ~/lib-system
-
-            SHA="${{ github.sha }}" && SHA="${SHA::7}"
             TAG_BACKEND=${{ needs.backend.outputs.sha_tag || '' }}
             TAG_CADDY=${{ needs.caddy.outputs.sha_tag || '' }}
+
+            # 没有任何变更，跳过部署
+            if [ -z "$TAG_BACKEND" ] && [ -z "$TAG_CADDY" ]; then
+              echo "No changes, skipping deploy"
+              exit 0
+            fi
+
+            cd ~/lib-system
+            SHA="${{ github.sha }}" && SHA="${SHA::7}"
 
             # backend 有构建才拉新镜像并重启全部服务
             if [ -n "$TAG_BACKEND" ]; then
