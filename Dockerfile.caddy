@@ -1,5 +1,13 @@
 # ============================================================
-# Stage 1 — Build frontend WASM
+# Stage 1 — Build Caddy with ratelimit plugin
+# ============================================================
+FROM caddy:2-builder AS caddy-builder
+
+RUN xcaddy build \
+    --with github.com/mholt/caddy-ratelimit
+
+# ============================================================
+# Stage 2 — Build frontend WASM
 # ============================================================
 FROM rust:slim-bookworm AS frontend-builder
 
@@ -19,8 +27,9 @@ RUN cd frontend && dx build --platform web --release && \
     cp -r target/dx/library-system-web/release/web/public /frontend-dist
 
 # ============================================================
-# Stage 2 — 基于你已有的 Caddy 镜像加前端文件
+# Stage 3 — Final: Caddy + ratelimit + frontend files
 # ============================================================
-FROM firechickenmp4/my-caddy-with-ratelimit
+FROM caddy:2
 
+COPY --from=caddy-builder /usr/bin/caddy /usr/bin/caddy
 COPY --from=frontend-builder /frontend-dist /usr/share/caddy
