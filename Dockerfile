@@ -46,7 +46,7 @@ RUN cmake -B build -S . -DCMAKE_BUILD_TYPE=Release \
 FROM ubuntu:22.04 AS runtime
 
 RUN apt-get update && apt-get install -y \
-    ca-certificates libjsoncpp-dev libmariadb-dev-compat \
+    ca-certificates curl libjsoncpp25 libmariadb3 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=backend /library-server /app/

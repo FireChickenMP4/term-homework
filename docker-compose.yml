@@ -9,16 +9,16 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
     restart: unless-stopped
 
   app:
     build: .
-    image: firechickenmp4/library-system
+    image: firechickenmp4/library-system:${TAG:-latest}
     depends_on:
       db:
         condition: service_healthy
@@ -29,18 +29,33 @@ services:
       DB_NAME: ${DB_NAME:-lib}
       DB_USER: ${DB_USER:-lib}
       DB_PASSWORD: ${DB_PASSWORD:-lib}
+    healthcheck:
+      test: ["CMD-SHELL", "pidof library-server || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    ports:
+      - "8808:8808"
     restart: unless-stopped
 
   caddy:
     build:
       context: .
       dockerfile: Dockerfile.caddy
-    image: firechickenmp4/lib-caddy
+    image: firechickenmp4/lib-caddy:${TAG:-latest}
     ports:
       - "80:80"
       - "443:443"
     depends_on:
-      - app
+      app:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "caddy", "version"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
 volumes:

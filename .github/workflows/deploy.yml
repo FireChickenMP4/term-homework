@@ -43,6 +43,8 @@ jobs:
     needs: [ changes ]
     if: ${{ (github.event_name == 'workflow_dispatch' && !github.event.inputs.deploy_only) || needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
+    outputs:
+      sha_tag: ${{ steps.tag.outputs.sha_tag }}
     steps:
       - uses: actions/checkout@v4
 
@@ -71,16 +73,16 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          no-cache-filters: runtime
+          no-cache: true
 
       - name: Print digest
+        id: tag
         run: |
+          SHA_TAG=$(echo "${{ steps.meta.outputs.tags }}" | cut -d, -f1 | rev | cut -d: -f1 | rev)
+          echo "sha_tag=$SHA_TAG" >> $GITHUB_OUTPUT
           echo "## Backend image" >> $GITHUB_STEP_SUMMARY
+          echo "tag: $SHA_TAG" >> $GITHUB_STEP_SUMMARY
           echo "digest: ${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
-          echo "tags: ${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
-          echo "digest=${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
 
   caddy:
     needs: [ changes ]
@@ -149,6 +151,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd ~/lib-system
-            docker compose pull
-            docker compose up -d
+            TAG=${{ needs.backend.outputs.sha_tag || 'latest' }} docker compose pull
+            TAG=${{ needs.backend.outputs.sha_tag || 'latest' }} docker compose up -d
             docker image prune -f

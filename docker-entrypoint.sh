@@ -1,5 +1,11 @@
 #!/bin/bash
-set -e
+
+# 等待 MySQL 就绪
+for i in $(seq 1 30); do
+  timeout 2 bash -c "echo >/dev/tcp/${DB_HOST:-db}/${DB_PORT:-3306}" 2>/dev/null && break
+  echo "Waiting for MySQL... ($i/30)"
+  sleep 2
+done
 
 # 从环境变量生成 config.json
 cat > config.json <<EOF
