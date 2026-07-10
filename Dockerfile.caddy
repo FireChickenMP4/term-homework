@@ -15,10 +15,14 @@ RUN apt-get update && apt-get install -y \
     curl pkg-config libssl-dev binaryen \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSLo /usr/local/bin/dx \
-    "https://github.com/DioxusLabs/dioxus/releases/latest/download/dx-x86_64-unknown-linux-gnu" \
-    && chmod +x /usr/local/bin/dx \
-    || cargo install dioxus-cli --locked
+RUN ok=false; \
+    for i in 1 2 3; do \
+      curl -fsSLo /usr/local/bin/dx \
+        "https://github.com/DioxusLabs/dioxus/releases/download/v0.7.9/dx-x86_64-unknown-linux-gnu" \
+      && chmod +x /usr/local/bin/dx && ok=true && break; \
+      sleep 2; \
+    done; \
+    $ok || cargo install dioxus-cli --locked
 
 RUN rustup target add wasm32-unknown-unknown
 
