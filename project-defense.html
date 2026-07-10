@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图书馆管理系统 - 项目答辩</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;overflow:hidden;background:#0a0a1a;color:#e0e0f0;height:100vh;width:100vw}
+.slides{position:relative;width:100vw;height:100vh}
+.slide{
+    position:absolute;top:0;left:0;width:100%;height:100%;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    padding:36px 6%;opacity:0;visibility:hidden;transition:opacity 0.5s,visibility 0.5s;
+    overflow:hidden;
+}
+.slide.active{opacity:1;visibility:visible}
+.slide.exit{opacity:0;visibility:hidden}
+.slide::before{
+    content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+    background-image:linear-gradient(rgba(0,150,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,150,255,0.03) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0
+}
+.slide::after{
+    content:'';position:absolute;top:-50%;left:-20%;width:70%;height:200%;
+    background:radial-gradient(ellipse,rgba(0,120,255,0.06)0%,transparent 70%);
+    pointer-events:none;z-index:0
+}
+.slide>*{position:relative;z-index:1;max-width:1200px;width:100%}
+
+/* Headers */
+.hd{display:flex;flex-direction:column;align-items:flex-start;width:100%;margin-bottom:24px}
+.hd h2{font-size:clamp(30px,3vw,46px);font-weight:700;background:linear-gradient(135deg,#00aaff,#7c5cff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hd .ln{width:56px;height:3px;background:linear-gradient(90deg,#00aaff,#7c5cff);border-radius:2px;margin-top:8px}
+.sub{font-size:clamp(17px,1.25vw,20px);color:rgba(255,255,255,0.5);margin-bottom:16px;width:100%}
+
+/* Page indicator */
+.pi{position:fixed;bottom:24px;right:28px;z-index:100;display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.3);font-family:'Courier New',monospace}
+.pd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.15);transition:all 0.3s;cursor:pointer}
+.pd.active{background:#00aaff;box-shadow:0 0 8px rgba(0,170,255,0.5)}
+.pd:hover{background:rgba(255,255,255,0.35)}
+.nh{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99;font-size:10px;color:rgba(255,255,255,0.12);font-family:'Courier New',monospace;letter-spacing:2px;animation:ph 2s ease-in-out infinite}
+@keyframes ph{0%,100%{opacity:0.12}50%{opacity:0.35}}
+
+/* Title slide */
+.tc{text-align:center}
+.tc h1{font-size:clamp(46px,6vw,78px);font-weight:700;background:linear-gradient(135deg,#00aaff,#7c5cff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px}
+.tc .ss{font-size:clamp(17px,1.4vw,22px);color:rgba(255,255,255,0.4);letter-spacing:2px}
+.tc .al{width:60px;height:3px;margin:16px auto;background:linear-gradient(90deg,#00aaff,#7c5cff);border-radius:2px}
+.tc .meta{font-size:clamp(12px,1vw,15px);color:rgba(255,255,255,0.2);margin-top:18px;font-family:'Courier New',monospace}
+
+/* Grid */
+.gr{display:grid;gap:24px}
+.gr.g4{grid-template-columns:repeat(4,1fr)}
+.gr.g3{grid-template-columns:repeat(3,1fr)}
+.gr.g2{grid-template-columns:repeat(2,1fr)}
+
+/* Cards */
+.cd{
+    border-radius:10px;padding:22px 26px;transition:all 0.3s;
+}
+.cd:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.cd .l{font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:'Courier New',monospace}
+.cd .v{font-size:clamp(17px,1.25vw,22px);color:#e0e0f0;line-height:1.5}
+.cd .vh{font-weight:600;font-size:clamp(17px,1.25vw,22px)}
+.cd .sm{font-size:13px;color:rgba(255,255,255,0.3);margin-top:5px}
+
+/* Card colors - individual like arch boxes */
+.cf0{border:1px solid rgba(0,170,255,0.2);background:rgba(0,170,255,0.06)}
+.cf0 .l{color:rgba(0,170,255,0.7)}.cf0 .vh{color:#00aaff}
+.cf1{border:1px solid rgba(124,92,255,0.2);background:rgba(124,92,255,0.06)}
+.cf1 .l{color:rgba(124,92,255,0.7)}.cf1 .vh{color:#a78bfa}
+.cf2{border:1px solid rgba(255,170,0,0.2);background:rgba(255,170,0,0.06)}
+.cf2 .l{color:rgba(255,170,0,0.7)}.cf2 .vh{color:#fbbf24}
+.cf3{border:1px solid rgba(0,200,150,0.2);background:rgba(0,200,150,0.06)}
+.cf3 .l{color:rgba(0,200,150,0.7)}.cf3 .vh{color:#34d399}
+.cf4{border:1px solid rgba(255,100,100,0.2);background:rgba(255,100,100,0.06)}
+.cf4 .l{color:rgba(255,100,100,0.7)}.cf4 .vh{color:#f87171}
+.cf5{border:1px solid rgba(200,100,200,0.2);background:rgba(200,100,200,0.06)}
+.cf5 .l{color:rgba(200,100,200,0.7)}.cf5 .vh{color:#c084fc}
+.cf6{border:1px solid rgba(0,150,255,0.2);background:rgba(0,150,255,0.06)}
+.cf6 .l{color:rgba(0,150,255,0.7)}.cf6 .vh{color:#60a5fa}
+.cf7{border:1px solid rgba(255,130,50,0.2);background:rgba(255,130,50,0.06)}
+.cf7 .l{color:rgba(255,130,50,0.7)}.cf7 .vh{color:#fb923c}
+
+/* Architecture boxes */
+.ad{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.ab{
+    padding:14px 26px;border-radius:8px;text-align:center;
+    font-size:clamp(15px,1.1vw,19px);border:1px solid rgba(255,255,255,0.1);
+    min-width:100px;transition:all 0.3s;font-weight:500
+}
+.ab:hover{transform:scale(1.06)}
+.aa{color:rgba(255,255,255,0.1);font-size:18px;margin:3px 0}
+.ac0{background:rgba(0,170,255,0.1);border-color:rgba(0,170,255,0.25);color:#00aaff}
+.ac1{background:rgba(124,92,255,0.1);border-color:rgba(124,92,255,0.25);color:#a78bfa}
+.ac2{background:rgba(255,170,0,0.1);border-color:rgba(255,170,0,0.25);color:#fbbf24}
+.ac3{background:rgba(0,200,150,0.1);border-color:rgba(0,200,150,0.25);color:#34d399}
+.ac4{background:rgba(255,100,100,0.1);border-color:rgba(255,100,100,0.25);color:#f87171}
+.ac5{background:rgba(200,100,200,0.1);border-color:rgba(200,100,200,0.25);color:#c084fc}
+.ac6{background:rgba(0,150,255,0.1);border-color:rgba(0,150,255,0.25);color:#60a5fa}
+
+/* Pipeline */
+.wf{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center}
+.ws{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 24px;border-radius:7px;border:1px solid rgba(255,255,255,0.06);text-align:center;font-size:clamp(13px,0.9vw,15px);color:rgba(255,255,255,0.45)}
+.ws .n{font-size:clamp(18px,1.3vw,22px);font-weight:700;color:#00aaff}
+.wa{color:rgba(255,255,255,0.1);font-size:clamp(13px,1.1vw,18px);margin:0 2px}
+
+/* Code blocks */
+.cb{
+    background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.07);border-radius:8px;
+    padding:18px 22px;font-family:'Cascadia Code','Fira Code','Courier New',monospace;
+    font-size:clamp(13px,0.9vw,16px);line-height:1.6;overflow-x:auto;color:#b0b0c8
+}
+.cb .k{color:#7c5cff}.cb .s{color:#34d399}.cb .t{color:#60a5fa}
+.cb .c{color:#6b7280;font-style:italic}.cb .f{color:#fbbf24}.cb .r{color:#f87171}
+
+/* Code inside cards */
+.cd .cc{
+    background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);
+    border-radius:8px;padding:20px;margin-top:8px;
+    font-family:'Cascadia Code','Fira Code','Courier New',monospace;
+    font-size:clamp(12px,0.85vw,14px);line-height:1.6;overflow-x:auto;color:#b0b0c8
+}
+.cd .cc .k{color:#7c5cff}.cd .cc .s{color:#34d399}.cd .cc .c{color:#6b7280;font-style:italic}
+
+/* ER */
+.er{display:flex;align-items:center;gap:24px;justify-content:center}
+.eb{display:flex;flex-direction:column;align-items:center;gap:4px;padding:20px 30px;border:2px solid rgba(0,170,255,0.2);border-radius:10px}
+.eb .nm{font-size:clamp(17px,1.3vw,22px);font-weight:700;color:#00aaff;margin-bottom:3px}
+.eb .fd{font-size:clamp(12px,0.85vw,14px);color:rgba(255,255,255,0.4);text-align:center;line-height:1.6}
+.ea{display:flex;flex-direction:column;align-items:center;color:rgba(255,255,255,0.15);font-size:clamp(12px,0.9vw,15px);font-family:'Courier New',monospace}
+.eu{border-color:rgba(124,92,255,0.25)}.eu .nm{color:#a78bfa}
+.ew{border-color:rgba(255,170,0,0.25)}.ew .nm{color:#fbbf24}
+.ebk{border-color:rgba(0,200,150,0.25)}.ebk .nm{color:#34d399}
+
+/* Filter table */
+.ft{width:100%;border-collapse:collapse;font-size:clamp(12px,0.85vw,14px);margin-bottom:10px}
+.ft th{text-align:left;padding:8px 12px;background:rgba(0,170,255,0.06);color:#00aaff;border-bottom:1px solid rgba(0,170,255,0.12);font-weight:600;font-family:'Courier New',monospace}
+.ft td{padding:7px 12px;border-bottom:1px solid rgba(255,255,255,0.03);color:#b8b8d0}
+
+/* Security grid */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.si{padding:10px 14px;border-radius:7px;border:1px solid rgba(255,255,255,0.05)}
+.si .st{font-size:clamp(13px,0.9vw,15px);font-weight:600;color:#00aaff}
+.si .sd{font-size:clamp(12px,0.8vw,14px);color:rgba(255,255,255,0.4);line-height:1.4;margin-top:2px}
+.si .sm{font-size:clamp(11px,0.75vw,13px);font-family:'Courier New',monospace;color:rgba(255,255,255,0.2);margin-top:2px}
+
+/* Hover card */
+.hc{transition:all 0.3s}
+.hc:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+
+/* Startup */
+.su{font-size:clamp(13px,0.9vw,16px)}
+.su .ss{display:flex;align-items:center;gap:10px;padding:6px 0}
+.su .ss .ci{width:22px;height:22px;border-radius:50%;background:rgba(0,170,255,0.1);color:#00aaff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.su .ss .ct{color:#b8b8d0}
+
+/* Animations */
+.sl .an{opacity:0;transform:translateY(20px);transition:all 0.4s ease-out}
+.sl.active .an{opacity:1;transform:translateY(0)}
+.sl.active .an:nth-child(1){transition-delay:0.08s}
+.sl.active .an:nth-child(2){transition-delay:0.16s}
+.sl.active .an:nth-child(3){transition-delay:0.24s}
+.sl.active .an:nth-child(4){transition-delay:0.32s}
+.sl.active .an:nth-child(5){transition-delay:0.40s}
+.sl.active .an:nth-child(6){transition-delay:0.48s}
+.sl.active .an:nth-child(7){transition-delay:0.56s}
+.sl.active .an:nth-child(8){transition-delay:0.64s}
+.sl.active .an:nth-child(9){transition-delay:0.72s}
+.sl.active .an:nth-child(10){transition-delay:0.80s}
+.sl .as{opacity:0;transform:scale(0.85);transition:all 0.5s ease-out}
+.sl.active .as{opacity:1;transform:scale(1)}
+
+@media(max-width:768px){
+    .slide{padding:20px 16px}
+    .gr.g4{grid-template-columns:1fr 1fr}
+    .gr.g3,.gr.g2{grid-template-columns:1fr}
+    .er{flex-direction:column;gap:12px}
+    .sg{grid-template-columns:1fr}
+    .ws{padding:6px 10px}
+    .ab{padding:8px 14px;min-width:60px;font-size:11px}
+    .cb,.cd .cc{font-size:9px;padding:10px 12px}
+    .pi{display:none}.nh{display:none}
+}
+@media(max-width:480px){.gr.g4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="slides" id="sc">
+
+<!-- 1: 封面 -->
+<div class="slide tc active" data-index="0">
+    <div class="as" style="max-width:none">
+        <h1>图书馆管理系统</h1>
+        <div class="ss">Library Management System</div>
+        <div class="al"></div>
+        <div style="font-size:clamp(12px,1vw,15px);color:rgba(255,255,255,0.25);font-family:'Courier New',monospace;margin-top:10px">
+        C++20 / Drogon / Rust + Dioxus / MySQL / Docker
+        </div>
+        <div class="meta">项目答辩 · 2026</div>
+    </div>
+</div>
+
+<!-- 2: 项目概述 - 技术栈 -->
+<div class="slide sl" data-index="1">
+    <div class="hd an"><h2>项目概述</h2><div class="ln"></div></div>
+    <div class="sub an">基于 C++20 + Drogon 的图书馆管理后端，支持图书 CRUD、JWT 鉴权、借阅归还、模糊搜索</div>
+    <div class="gr g4 an">
+        <div class="cd cf0"><div class="l">Web 框架</div><div class="vh">Drogon 1.9</div><div class="sm">C++20 异步非阻塞高性能框架</div></div>
+        <div class="cd cf1"><div class="l">构建系统</div><div class="vh">CMake + vcpkg</div><div class="sm">C++ 标准构建工具链</div></div>
+        <div class="cd cf2"><div class="l">数据库</div><div class="vh">MySQL 8.0</div><div class="sm">主业务存储 + LIKE 模糊搜索</div></div>
+        <div class="cd cf3"><div class="l">前端</div><div class="vh">Rust + Dioxus</div><div class="sm">WASM SPA + Tailwind CSS v4</div></div>
+        <div class="cd cf4"><div class="l">鉴权</div><div class="vh">手工 JWT (HS256)</div><div class="sm">base64url + HMAC-SHA256</div></div>
+        <div class="cd cf5"><div class="l">密码哈希</div><div class="vh">SHA-256 + Salt</div><div class="sm">OpenSSL + 随机 32 位 hex salt</div></div>
+        <div class="cd cf6"><div class="l">容器化</div><div class="vh">Docker Compose</div><div class="sm">MySQL + Backend + Caddy</div></div>
+        <div class="cd cf7"><div class="l">CI/CD</div><div class="vh">GitHub Actions</div><div class="sm">自动构建 + Docker Hub + SSH 部署</div></div>
+    </div>
+</div>
+
+<!-- 3: 技术选型理由 -->
+<div class="slide sl" data-index="2">
+    <div class="hd an"><h2>技术选型理由</h2><div class="ln"></div></div>
+    <div class="gr g3 an">
+        <div class="cd cf0">
+            <div class="l">Drogon</div>
+            <div class="v">内置 Filter 中间件，lambda 直接注册路由，无需 Controller 类</div>
+            <div style="font-size:11px;color:rgba(0,170,255,0.4);margin-top:8px;font-family:'Courier New',monospace">// 异步非阻塞高性能</div>
+        </div>
+        <div class="cd cf4">
+            <div class="l">手工 JWT (HS256)</div>
+            <div class="v">避免第三方 JWT 库，自实现 base64url + HMAC-SHA256</div>
+            <div style="font-size:11px;color:rgba(255,100,100,0.4);margin-top:8px;font-family:'Courier New',monospace">// 零额外依赖</div>
+        </div>
+        <div class="cd cf5">
+            <div class="l">SHA-256 + Salt</div>
+            <div class="v">OpenSSL 内置算法，每用户独立随机 salt，防彩虹表</div>
+            <div style="font-size:11px;color:rgba(200,100,200,0.4);margin-top:8px;font-family:'Courier New',monospace">// 不可逆哈希</div>
+        </div>
+        <div class="cd cf6">
+            <div class="l">Docker Compose</div>
+            <div class="v">一键编排 MySQL + Backend + Caddy，健康检查链保证启动顺序</div>
+            <div style="font-size:11px;color:rgba(0,150,255,0.4);margin-top:8px;font-family:'Courier New',monospace">// 容器内网通信</div>
+        </div>
+        <div class="cd cf3">
+            <div class="l">Rust + Dioxus</div>
+            <div class="v">WASM 编译，静态文件由 Caddy 托管，无需 Node 运行时</div>
+            <div style="font-size:11px;color:rgba(0,200,150,0.4);margin-top:8px;font-family:'Courier New',monospace">// 类型安全前端</div>
+        </div>
+        <div class="cd cf7">
+            <div class="l">GitHub Actions</div>
+            <div class="v">变更检测 + 并行构建 + Docker Hub + SSH 部署</div>
+            <div style="font-size:11px;color:rgba(255,130,50,0.4);margin-top:8px;font-family:'Courier New',monospace">// 零停机滚动更新</div>
+        </div>
+    </div>
+</div>
+
+<!-- 4: 项目目录结构 -->
+<div class="slide sl" data-index="3">
+    <div class="hd an"><h2>项目目录结构</h2><div class="ln"></div></div>
+    <div class="an cb" style="font-size:clamp(11px,0.85vw,14px)">
+    term-homework/<br>
+    &nbsp;&#9500;&#9472; CMakeLists.txt &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># 顶层 CMake 配置</span><br>
+    &nbsp;&#9500;&#9472; docker-compose.yml &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># 服务编排</span><br>
+    &nbsp;&#9500;&#9472; Caddyfile &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># Caddy 反向代理配置</span><br>
+    &nbsp;&#9500;&#9472; <span class="k">src/</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># 后端核心</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9500;&#9472; main.cpp &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># 程序入口</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9500;&#9472; <span class="f">init/</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># DB 初始化 + CORS + 路由注册</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9500;&#9472; <span class="f">controller/</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># book.cpp / user.cpp / lib.cpp</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9500;&#9472; <span class="f">models/</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># Book / User / Library CRUD</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9500;&#9472; <span class="f">auth/</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># jwt + AuthFilter 三级鉴权</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9492;&#9472; <span class="f">utils/</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># config / env / hash / base64</span><br>
+    &nbsp;&#9500;&#9472; <span class="k">frontend/</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># Rust + Dioxus + WASM</span><br>
+    &nbsp;&#9500;&#9472; <span class="k">tests/</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># GTest 单元测试</span><br>
+    &nbsp;&#9492;&#9472; .github/workflows/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># CI/CD 流水线</span>
+    </div>
+</div>
+
+<!-- 5: 分层架构 + 启动工作流 -->
+<div class="slide sl" data-index="4">
+    <div class="hd an"><h2>分层架构与启动工作流</h2><div class="ln"></div></div>
+    <div class="ad an">
+        <div class="ar"><div class="ab ac0">Client (Browser)</div></div>
+        <div class="aa">&#9660; HTTP :80/:443</div>
+        <div class="ar"><div class="ab ac1">Caddy 反向代理</div></div>
+        <div class="aa">&#9660; :8808</div>
+        <div class="ar" style="gap:8px">
+            <div class="ab ac2">Filter 层<br><span style="font-size:11px;color:rgba(255,255,255,0.3)">三级鉴权</span></div>
+            <div class="aa" style="font-size:12px">&#9660;</div>
+            <div class="ab ac3">Handler 层<br><span style="font-size:11px;color:rgba(255,255,255,0.3)">lambda 回调</span></div>
+            <div class="aa" style="font-size:12px">&#9660;</div>
+            <div class="ab ac4">Model 层<br><span style="font-size:11px;color:rgba(255,255,255,0.3)">CRUD + 业务</span></div>
+            <div class="aa" style="font-size:12px">&#9660;</div>
+            <div class="ab ac5">Utils 层<br><span style="font-size:11px;color:rgba(255,255,255,0.3)">基础工具</span></div>
+        </div>
+        <div class="aa">&#9660;</div>
+        <div class="ar"><div class="ab ac6">MySQL 8.0</div></div>
+    </div>
+    <div class="an su" style="border-top:1px solid rgba(255,255,255,0.05);padding-top:14px;margin-top:16px;width:100%">
+        <div class="ss"><div class="ci">1</div><div class="ct">读取环境变量</div></div>
+        <div class="ss"><div class="ci">2</div><div class="ct">连接 MySQL，自动建库建表 + 插入默认超级管理员</div></div>
+        <div class="ss"><div class="ci">3</div><div class="ct">注册 CORS + 静态文件服务 + 加载配置</div></div>
+        <div class="ss"><div class="ci">4</div><div class="ct">注册所有路由 &rarr; app.run()</div></div>
+    </div>
+</div>
+
+<!-- 6: 请求处理 + 路由注册 -->
+<div class="slide sl" data-index="5">
+    <div class="hd an"><h2>路由注册</h2><div class="ln"></div></div>
+    <div class="sub an">路由按领域拆分为三个文件，由 routes.cpp 统一注册</div>
+    <div class="an cb" style="font-size:clamp(11px,0.8vw,13px)">
+    <span class="f">Routes::registerRoutes</span>(app) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// routes.cpp</span><br>
+    &nbsp;&#9500;&#9472; GET /api/health &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// 健康检查</span><br>
+    &nbsp;&#9500;&#9472; <span class="f">registerBookRoutes</span>(app) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// /api/books/*</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9500;&#9472; GET /api/books &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// 列表 + 分页 + 搜索</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9500;&#9472; GET /api/books/{id} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// 详情</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9492;&#9472; POST/PUT/DELETE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// [AuthFilter]</span><br>
+    &nbsp;&#9500;&#9472; <span class="f">registerUserRoutes</span>(app) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// /api/login, /api/users/*</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9500;&#9472; POST /api/login &amp; /api/register &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// 无需鉴权</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9500;&#9472; GET /api/me &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// [AuthFilter]</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&#9492;&#9472; GET /api/users &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// [AdminFilter]</span><br>
+    &nbsp;&#9500;&#9472; <span class="f">registerLibRoutes</span>(app) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// /api/borrow, /api/return</span><br>
+    &nbsp;&#9492;&#9472; SPA fallback &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// GET /login, /register, /*</span>
+    </div>
+</div>
+
+<!-- 7: Controller 层代码 -->
+<div class="slide sl" data-index="6">
+    <div class="hd an"><h2>核心代码 · Controller 层</h2><div class="ln"></div></div>
+    <div class="sub an">Drogon 支持 lambda 直接注册路由，所有 controller 使用同一闭包模板</div>
+    <div class="an cb" style="font-size:clamp(11px,0.8vw,13px)">
+    <span class="c">// 三种变体，结构始终：解析参数 &rarr; 调 Model &rarr; 组响应 &rarr; callback</span><br><br>
+    <span class="c">// 1. GET 查询列表 — 参数 &rarr; Model &rarr; JSON 数组 + 分页</span><br>
+    app.registerHandler(<span class="s">"/api/books"</span>,<br>
+    &nbsp;&nbsp;[&amp;](req, cb) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">auto</span> page = req-&gt;getParameter(<span class="s">"page"</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">auto</span> books = <span class="f">Book::getAll</span>(page, limit);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;cb(newHttpJsonResponse(json));<br>
+    &nbsp;&nbsp;}, {Get});<br><br>
+    <span class="c">// 2. POST 新增 — JSON body &rarr; Model &rarr; 201</span><br>
+    app.registerHandler(<span class="s">"/api/books"</span>,<br>
+    &nbsp;&nbsp;[&amp;](req, cb) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">auto</span> json = req-&gt;getJsonObject();<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">auto</span> id = <span class="f">Book::add</span>(...);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;resp-&gt;setStatusCode(k201Created); cb(resp);<br>
+    &nbsp;&nbsp;}, {Post, <span class="s">"AuthFilter"</span>});<br><br>
+    <span class="c">// 3. DELETE — 路径参数 + try-catch</span><br>
+    app.registerHandler(<span class="s">"/api/books/{id}"</span>,<br>
+    &nbsp;&nbsp;[&amp;](req, cb, <span class="k">int</span> id) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">try</span> { <span class="f">Book::remove</span>(id); cb(resp); }<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">catch</span> (<span class="k">const</span> exception &amp;e) { cb(err(e.what())); }<br>
+    &nbsp;&nbsp;}, {Delete, <span class="s">"AuthFilter"</span>});
+    </div>
+</div>
+
+<!-- 10: Model 层代码 -->
+<div class="slide sl" data-index="7">
+    <div class="hd an"><h2>核心代码 · Model 层</h2><div class="ln"></div></div>
+    <div class="sub an">参数化查询防 SQL 注入，条件更新 + 补偿回滚保证并发安全</div>
+    <div class="gr g2 an">
+        <div class="cd cf3">
+            <div class="l">基本 CRUD 模板</div>
+            <div class="cc">
+            <span class="k">static auto</span> <span class="f">db</span>() { <span class="k">return</span> app().getDbClient(); }<br><br>
+            <span class="k">int</span> <span class="f">Book::add</span>(...) {<br>
+            &nbsp;&nbsp;db()-&gt;execSqlSync(<span class="s">"INSERT INTO books ... VALUES (?,?,?,?)"</span>);<br>
+            &nbsp;&nbsp;<span class="k">return</span> LAST_INSERT_ID();<br>
+            }<br><br>
+            <span class="t">Book</span> <span class="f">Book::getById</span>(<span class="k">int</span> id) {<br>
+            &nbsp;&nbsp;<span class="k">auto</span> r = db()-&gt;execSqlSync(<span class="s">"SELECT * FROM books WHERE id = ?"</span>, id);<br>
+            &nbsp;&nbsp;<span class="k">if</span> (r.empty()) <span class="k">throw</span> runtime_error(<span class="s">"图书不存在"</span>);<br>
+            &nbsp;&nbsp;<span class="k">return</span> rowToBook(r[0]);<br>
+            }
+            </div>
+        </div>
+        <div class="cd cf4">
+            <div class="l">Library::borrowBook — 补偿回滚</div>
+            <div class="cc">
+            <span class="c">// 条件更新 (WHERE available &gt; 0 保证不超卖)</span><br>
+            <span class="k">auto</span> res = db()-&gt;execSqlSync(<br>
+            &nbsp;&nbsp;<span class="s">"UPDATE books SET available=available-1 "</span><br>
+            &nbsp;&nbsp;<span class="s">"WHERE id=? AND available&gt;0"</span>, bookId);<br>
+            <span class="k">if</span> (res.affectedRows() == 0)<br>
+            &nbsp;&nbsp;<span class="k">throw</span> runtime_error(<span class="s">"暂无库存可借"</span>);<br>
+            <span class="c">// 唯一约束防重复，失败则补偿回滚</span><br>
+            <span class="k">try</span> { db()-&gt;execSqlSync(<span class="s">"INSERT INTO borrowed_books ..."</span>); }<br>
+            <span class="k">catch</span> (...) {<br>
+            &nbsp;&nbsp;db()-&gt;execSqlSync(<span class="s">"UPDATE books SET available=available+1 ..."</span>);<br>
+            &nbsp;&nbsp;<span class="k">throw</span> runtime_error(<span class="s">"已借阅过此书"</span>);<br>
+            }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 9: 鉴权系统 · Filter + JWT -->
+<div class="slide sl" data-index="8">
+    <div class="hd an"><h2>鉴权系统 · Filter &amp; JWT</h2><div class="ln"></div></div>
+    <div class="an" style="display:flex;gap:24px;width:100%;margin-bottom:24px">
+        <div style="flex:1;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:12px 16px" class="hc">
+            <div style="font-size:10px;color:rgba(0,170,255,0.6);text-transform:uppercase;letter-spacing:1px;font-family:'Courier New',monospace;margin-bottom:6px">Filter 三级鉴权</div>
+            <table class="ft">
+                <tr><th>Filter</th><th>校验条件</th><th>适用路由</th></tr>
+                <tr><td style="color:#00aaff;font-weight:600">AuthFilter</td><td>Token 合法即可</td><td>/api/me, /api/borrow, /api/books</td></tr>
+                <tr><td style="color:#fbbf24;font-weight:600">AdminFilter</td><td>Token + admin</td><td>GET /api/users, /api/admin/borrowed</td></tr>
+                <tr><td style="color:#f87171;font-weight:600">SuperAdminFilter</td><td>Token + admin + user_id==1</td><td>内部直接判断 id</td></tr>
+            </table>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:12px 16px" class="hc">
+            <div style="font-size:10px;color:rgba(0,170,255,0.6);text-transform:uppercase;letter-spacing:1px;font-family:'Courier New',monospace;margin-bottom:6px">鉴权完整链路</div>
+            <div style="font-size:clamp(14px,1vw,17px);color:rgba(255,255,255,0.65);line-height:2">
+            客户端登录 &rarr; <span style="color:#fbbf24;font-weight:600">jwt::create()</span> &rarr; 返回 Token<br>
+            后续请求 &rarr; <span style="color:#f87171">Authorization: Bearer &lt;token&gt;</span><br>
+            &nbsp;&nbsp;&rarr; <span style="color:#00aaff;font-weight:600">AuthFilter::doFilter()</span> &rarr; jwt::verify()<br>
+            &nbsp;&nbsp;&rarr; 注入 payload &rarr; <span style="color:#34d399">fccb()</span> 放行 &rarr; Handler
+            </div>
+        </div>
+    </div>
+    <div class="gr g2 an">
+        <div style="background:rgba(0,170,255,0.04);border:1px solid rgba(0,170,255,0.15);border-radius:8px;padding:12px 16px" class="hc">
+            <div style="font-size:10px;color:rgba(0,170,255,0.6);text-transform:uppercase;letter-spacing:1px;font-family:'Courier New',monospace;margin-bottom:6px">jwt::create() — 签发</div>
+            <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:14px;font-family:'Cascadia Code','Fira Code','Courier New',monospace;font-size:clamp(12px,0.85vw,14px);line-height:1.6;overflow-x:auto;color:#b0b0c8">
+            header[<span style="color:#34d399">"alg"</span>] = <span style="color:#34d399">"HS256"</span>;<br>
+            header[<span style="color:#34d399">"typ"</span>] = <span style="color:#34d399">"JWT"</span>;<br>
+            <span style="color:#6b7280;font-style:italic">// 设置 payload</span><br>
+            payload[<span style="color:#34d399">"user_id"</span>] = userId;<br>
+            payload[<span style="color:#34d399">"permission"</span>] = perm;<br>
+            payload[<span style="color:#34d399">"exp"</span>] = now + 86400*7; <span style="color:#6b7280;font-style:italic">// 7 天</span><br><br>
+            <span style="color:#6b7280;font-style:italic">// base64url 编码头部和载荷</span><br>
+            <span style="color:#7c5cff">auto</span> b64h = b64urlEncode(writeString(header));<br>
+            <span style="color:#7c5cff">auto</span> b64p = b64urlEncode(writeString(payload));<br><br>
+            <span style="color:#6b7280;font-style:italic">// HMAC-SHA256 签名</span><br>
+            <span style="color:#7c5cff">auto</span> sig = b64urlEncode(hmacSha256(b64h+<span style="color:#34d399">"."</span>+b64p, SECRET()));<br>
+            <span style="color:#7c5cff">return</span> b64h + <span style="color:#34d399">"."</span> + b64p + <span style="color:#34d399">"."</span> + sig;
+            </div>
+        </div>
+        <div style="background:rgba(255,100,100,0.04);border:1px solid rgba(255,100,100,0.15);border-radius:8px;padding:12px 16px" class="hc">
+            <div style="font-size:10px;color:rgba(255,100,100,0.6);text-transform:uppercase;letter-spacing:1px;font-family:'Courier New',monospace;margin-bottom:6px">jwt::verify() — 校验</div>
+            <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:14px;font-family:'Cascadia Code','Fira Code','Courier New',monospace;font-size:clamp(12px,0.85vw,14px);line-height:1.6;overflow-x:auto;color:#b0b0c8">
+            <span style="color:#6b7280;font-style:italic">// 1. 分割 token</span><br>
+            <span style="color:#7c5cff">auto</span> b64h = token[..dot1];<br>
+            <span style="color:#7c5cff">auto</span> b64p = token[dot1+1 .. dot2];<br>
+            <span style="color:#7c5cff">auto</span> sig = token[dot2+1 ..];<br><br>
+            <span style="color:#6b7280;font-style:italic">// 2. 重算签名</span><br>
+            <span style="color:#7c5cff">if</span> (b64urlEncode(hmacSha256(...)) != sig)<br>
+            &nbsp;&nbsp;<span style="color:#7c5cff">return</span> {};<br><br>
+            <span style="color:#6b7280;font-style:italic">// 3. 检查过期</span><br>
+            <span style="color:#7c5cff">if</span> (payload[<span style="color:#34d399">"exp"</span>] &lt; time(nullptr))<br>
+            &nbsp;&nbsp;<span style="color:#7c5cff">return</span> {};<br><br>
+            <span style="color:#7c5cff">return</span> payload;
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 13: 数据库设计 -->
+<div class="slide sl" data-index="9">
+    <div class="hd an"><h2>数据库设计 · ER 关系</h2><div class="ln"></div></div>
+    <div class="er an">
+        <div class="eb eu">
+            <div class="nm">users</div>
+            <div class="fd">id (PK)<br>username (UNIQUE)<br>password / salt<br>permission</div>
+        </div>
+        <div class="ea">1 &#9679;&#9472;&#9472;&#9472;&#9679; N</div>
+        <div class="eb ew">
+            <div class="nm">borrowed_books</div>
+            <div class="fd">user_id (PK,FK)<br>book_id (PK,FK)</div>
+        </div>
+        <div class="ea">N &#9679;&#9472;&#9472;&#9472;&#9679; 1</div>
+        <div class="eb ebk">
+            <div class="nm">books</div>
+            <div class="fd">id (PK)<br>name / author<br>description<br>total / available</div>
+        </div>
+    </div>
+    <div class="an" style="font-size:clamp(12px,0.85vw,14px);color:rgba(255,255,255,0.15);font-family:'Courier New',monospace;text-align:center;margin-top:10px">
+    users 1 &rarr; N borrowed_books N &rarr; 1 books
+    </div>
+</div>
+
+<!-- 10: 前端概览 -->
+<div class="slide sl" data-index="10">
+    <div class="hd an"><h2>前端概览</h2><div class="ln"></div></div>
+    <div class="sub an">Rust + Dioxus 0.7 + Tailwind CSS v4 编译为 WASM，Caddy 直接托管静态文件</div>
+    <div class="gr g3 an">
+        <div class="cd cf3">
+            <div class="l">框架</div>
+            <div class="vh">Rust + Dioxus 0.7</div>
+            <div class="sm">WebAssembly SPA，类 React 响应式</div>
+        </div>
+        <div class="cd cf7">
+            <div class="l">样式</div>
+            <div class="vh">Tailwind CSS v4</div>
+            <div class="sm">实用优先，编译时生成最小 CSS</div>
+        </div>
+        <div class="cd cf0">
+            <div class="l">部署</div>
+            <div class="vh">Caddy 托管</div>
+            <div class="sm">WASM 静态文件，无需 Node</div>
+        </div>
+    </div>
+    <div class="an cb" style="font-size:clamp(11px,0.8vw,13px);margin-top:16px">
+    frontend/<br>
+    &nbsp;&#9500;&#9472; src/main.rs &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// Dioxus 入口</span><br>
+    &nbsp;&#9500;&#9472; src/components/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// UI 组件</span><br>
+    &nbsp;&#9500;&#9472; Cargo.toml &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// Rust 依赖</span><br>
+    &nbsp;&#9492;&#9472; dist/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// WASM + 静态资源输出</span>
+    </div>
+</div>
+
+<!-- 11: 部署 + CI/CD -->
+<div class="slide sl" data-index="11">
+    <div class="hd an"><h2>部署与 CI/CD</h2><div class="ln"></div></div>
+    <div class="wf an" style="margin-bottom:18px">
+        <div class="ws"><span class="n">&#9679;</span>Push main</div>
+        <div class="wa">&rarr;</div>
+        <div class="ws"><span class="n">&#9679;</span>变更检测</div>
+        <div class="wa">&rarr;</div>
+        <div class="ws"><span class="n">&#9679;</span>并行构建</div>
+        <div class="wa">&rarr;</div>
+        <div class="ws"><span class="n">&#9679;</span>Docker Hub</div>
+        <div class="wa">&rarr;</div>
+        <div class="ws"><span class="n">&#9679;</span>SSH 部署</div>
+    </div>
+    <div class="an" style="display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:18px;font-size:clamp(11px,0.8vw,13px);font-family:'Courier New',monospace">
+        <span style="color:#38bdf8">MySQL</span>
+        <span style="color:rgba(255,255,255,0.15)">(健康)</span>
+        <span style="color:rgba(255,255,255,0.2)">&rarr;</span>
+        <span style="color:#fbbf24">Backend</span>
+        <span style="color:rgba(255,255,255,0.15)">:8808/health</span>
+        <span style="color:rgba(255,255,255,0.2)">&rarr;</span>
+        <span style="color:#a78bfa">Caddy</span>
+        <span style="color:rgba(255,255,255,0.15)">:80/:443</span>
+    </div>
+    <div class="gr g2 an" style="gap:32px">
+        <div class="cd cf6">
+            <div class="l">Docker Compose 编排</div>
+            <div class="v" style="font-size:clamp(12px,0.85vw,14px);line-height:1.7">
+            <span style="color:#38bdf8">MySQL</span> :3306 &rarr; mysqladmin ping<br>
+            <span style="color:#38bdf8">Backend</span> :8808 &rarr; /api/health<br>
+            <span style="color:#38bdf8">Caddy</span> :80/:443 &rarr; 反向代理 + 自动 TLS<br>
+            内网通信，后端用 <span style="color:#fbbf24">db</span> 连接 MySQL
+            </div>
+        </div>
+        <div class="cd cf7">
+            <div class="l">GitHub Actions 流水线</div>
+            <div class="v" style="font-size:clamp(12px,0.85vw,14px);line-height:1.7">
+            <span style="color:#34d399">&#9654;</span> tj-actions 变更检测<br>
+            <span style="color:#34d399">&#9654;</span> 双镜像并行构建 (latest + SHA)<br>
+            <span style="color:#34d399">&#9654;</span> docker compose up -d 零停机<br>
+            <span style="color:#34d399">&#9654;</span> workflow_dispatch 手动触发
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 12: 成果展示 -->
+<div class="slide sl" data-index="12">
+    <div class="hd an"><h2>成果展示</h2><div class="ln"></div></div>
+    <div class="gr g2 an" style="gap:32px">
+        <div class="cd cf0">
+            <div class="l">演示地址</div>
+            <div class="vh">www.firechickenmp4.top</div>
+        </div>
+        <div class="cd cf5">
+            <div class="l">源代码</div>
+            <div class="vh">github.com/FireChickenMP4/term-homework</div>
+        </div>
+    </div>
+    <div class="an" style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:20px;width:100%">
+        <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center">
+            <div style="text-align:center;padding:14px 24px;border:1px solid rgba(0,200,150,0.2);border-radius:8px;background:rgba(0,200,150,0.04);min-width:140px">
+                <div style="font-size:28px;font-weight:700;color:#34d399">3</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">容器</div>
+            </div>
+            <div style="text-align:center;padding:14px 24px;border:1px solid rgba(0,170,255,0.2);border-radius:8px;background:rgba(0,170,255,0.04);min-width:140px">
+                <div style="font-size:28px;font-weight:700;color:#00aaff">8</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">API 端点</div>
+            </div>
+            <div style="text-align:center;padding:14px 24px;border:1px solid rgba(255,170,0,0.2);border-radius:8px;background:rgba(255,170,0,0.04);min-width:140px">
+                <div style="font-size:28px;font-weight:700;color:#fbbf24">3</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">流水线</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 13: 感谢 -->
+<div class="slide sl" data-index="13">
+    <div class="as" style="text-align:center;max-width:none">
+        <h1 style="font-size:clamp(36px,4.5vw,56px);background:linear-gradient(135deg,#00aaff,#7c5cff);-webkit-background-clip:text;-webkit-text-fill-color:transparent">谢谢</h1>
+        <div style="width:60px;height:3px;margin:16px auto;background:linear-gradient(90deg,#00aaff,#7c5cff);border-radius:2px"></div>
+        <div style="font-size:clamp(18px,2vw,26px);color:rgba(255,255,255,0.35)">欢迎提问</div>
+        <div style="font-size:clamp(11px,0.85vw,14px);color:rgba(255,255,255,0.15);margin-top:10px;font-family:'Courier New',monospace">C++20 + Drogon · Rust + Dioxus · Docker Compose</div>
+    </div>
+</div>
+
+</div>
+
+<div class="pi" id="pi">
+    <span id="pn">1</span><span style="opacity:0.3">/</span><span id="tp">15</span>
+    <span style="margin-left:6px;display:flex;gap:3px" id="ds"></span>
+</div>
+<div class="nh" id="nh">键盘 &larr;&rarr; / 滚轮 / 点击翻页</div>
+
+<script>
+(function(){
+    var S=document.querySelectorAll('.slide'),T=S.length,c=0,b=false,wt=0;
+    var D=document.getElementById('ds');
+    for(var i=0;i<T;i++){var d=document.createElement('div');d.className='pd'+(i===0?' active':'');d.di=i;d.addEventListener('click',function(){g(this.di)});D.appendChild(d)}
+    document.getElementById('tp').textContent=T;
+    function u(){document.getElementById('pn').textContent=c+1;document.querySelectorAll('.pd').forEach(function(d,i){d.classList.toggle('active',i===c)})}
+    function g(i){if(b||i===c||i<0||i>=T)return;b=true;S[c].classList.remove('active');S[c].classList.add('exit');c=i;S[c].classList.add('active');S[c].classList.remove('exit');u();setTimeout(function(){b=false},500)}
+    function n(){g(c+1)}function p(){g(c-1)}
+    document.addEventListener('keydown',function(e){if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();n()}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();p()}if(e.key==='Home'){e.preventDefault();g(0)}if(e.key==='End'){e.preventDefault();g(T-1)}});
+    document.addEventListener('wheel',function(e){var n=Date.now();if(n-wt<800)return;wt=n;if(e.deltaY>0)n();else p()},{passive:true});
+    var tx=0;document.addEventListener('touchstart',function(e){tx=e.changedTouches[0].screenX},{passive:true});document.addEventListener('touchend',function(e){var d=e.changedTouches[0].screenX-tx;if(Math.abs(d)>50){if(d<0)n();else p()}},{passive:true});
+    var hh=false;document.addEventListener('keydown',function(){if(!hh){var h=document.getElementById('nh');if(h){h.style.transition='opacity 0.5s';h.style.opacity='0'}hh=true}},{once:true});
+    document.addEventListener('click',function(){if(!hh){var h=document.getElementById('nh');if(h){h.style.transition='opacity 0.5s';h.style.opacity='0'}hh=true}},{once:true});
+    S.forEach(function(s){s.classList.remove('exit')});
+})();
+</script>
+</body>
+</html>

@@ -6,7 +6,7 @@ mod pages;
 mod state;
 mod ui;
 
-use pages::{Admin, Books, Borrowed, Login, Profile, Register};
+use pages::{Admin, Books, Borrowed, Introduction, Login, Profile, Register};
 use ui::{Navbar, ToastHost};
 
 #[derive(Debug, Clone, Routable, PartialEq)]
@@ -25,6 +25,8 @@ pub enum Route {
     Borrowed {},
     #[route("/admin")]
     Admin {},
+    #[route("/introduction")]
+    Introduction {},
     #[route("/:..path")]
     NotFound { path: Vec<String> },
 }
