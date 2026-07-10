@@ -9,13 +9,16 @@ RUN xcaddy build \
 # ============================================================
 # Stage 2 — Build frontend WASM
 # ============================================================
-FROM rust:slim-bookworm AS frontend-builder
+FROM rust:slim AS frontend-builder
 
 RUN apt-get update && apt-get install -y \
     curl pkg-config libssl-dev binaryen \
     && rm -rf /var/lib/apt/lists/*
 
-RUN cargo install dioxus-cli --locked
+RUN curl -fsSLo /tmp/dx.tar.gz \
+      "https://github.com/DioxusLabs/dioxus/releases/download/v0.7.9/dx-x86_64-unknown-linux-gnu.tar.gz" \
+    && tar xzf /tmp/dx.tar.gz -C /usr/local/bin \
+    && dx --version
 
 RUN rustup target add wasm32-unknown-unknown
 
