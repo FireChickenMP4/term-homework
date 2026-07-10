@@ -3,9 +3,27 @@
 #include "auth/AuthFilter.h"
 #include "utils/response.h"
 #include "auth/jwt.h"
+#include <json/value.h>
 
 void registerUserRoutes(drogon::HttpAppFramework &app)
 {
+    app.registerHandler("/api/refresh",
+                        [](const drogon::HttpRequestPtr &req,
+                           std::function<void(const drogon::HttpResponsePtr &)> &&cb)
+                        {
+                            auto jwt = getCurrentUser(req);
+                            if (jwt.isNull())
+                            {
+                                cb(err("请先登录", 401));
+                                return;
+                            }
+                            int userId = jwt["user_id"].asInt();
+                            std::string permission = jwt["permission"].asString();
+                            Json::Value token;
+                            token["token"] = jwt::create(userId, permission);
+                            cb(drogon::HttpResponse::newHttpJsonResponse(token));
+                        },
+                        {drogon::Post, "AuthFilter"});
     app.registerHandler("/api/login",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)

@@ -70,7 +70,7 @@ void init(drogon::HttpAppFramework &app)
     app.registerPostHandlingAdvice([](const drogon::HttpRequestPtr &,
                                       const drogon::HttpResponsePtr &resp)
                                    {
-        resp->addHeader("Access-Control-Allow-Origin", "*");
+        resp->addHeader("Access-Control-Allow-Origin", "https://www.firechickenmp4.top");
         resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization"); });
 

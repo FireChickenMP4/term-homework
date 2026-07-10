@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     libmariadb-dev libmariadb-dev-compat \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone --depth 1 --recurse-submodules https://github.com/drogonframework/drogon /tmp/drogon
+RUN git clone --depth 1 --branch v1.9.13 --recurse-submodules https://github.com/drogonframework/drogon /tmp/drogon
 
 WORKDIR /tmp/drogon/build
 RUN cmake .. -DCMAKE_BUILD_TYPE=Release \

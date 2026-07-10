@@ -1,9 +1,12 @@
+use std::time::Duration;
+
 use gloo_net::http::Request;
 use serde_json::json;
 
 use crate::models::{Book, BookListResponse, BorrowRecord, User, UserBrief};
 
 pub const BASE: &str = "/api";
+const TIMEOUT: Duration = Duration::from_secs(15);
 
 fn bearer(token: &str) -> String {
     format!("Bearer {token}")
@@ -33,8 +36,29 @@ async fn parse_error(resp: gloo_net::http::Response) -> String {
 pub async fn login(username: &str, password: &str) -> Result<String, String> {
     let body = json!({ "username": username, "password": password });
     let resp = Request::post(&format!("{BASE}/login"))
+        .timeout(TIMEOUT)
         .json(&body)
         .map_err(net_err)?
+        .send()
+        .await
+        .map_err(net_err)?;
+    if resp.ok() {
+        let text = resp.text().await.map_err(net_err)?;
+        let v: serde_json::Value =
+            serde_json::from_str(&text).map_err(|e| format!("解析失败：{e}"))?;
+        v.get("token")
+            .and_then(|t| t.as_str())
+            .map(|s| s.to_string())
+            .ok_or_else(|| "响应缺少 token".into())
+    } else {
+        Err(parse_error(resp).await)
+    }
+}
+
+pub async fn refresh(token: &str) -> Result<String, String> {
+    let resp = Request::post(&format!("{BASE}/refresh"))
+        .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .send()
         .await
         .map_err(net_err)?;
@@ -54,6 +78,7 @@ pub async fn login(username: &str, password: &str) -> Result<String, String> {
 pub async fn register(username: &str, password: &str) -> Result<String, String> {
     let body = json!({ "username": username, "password": password });
     let resp = Request::post(&format!("{BASE}/register"))
+        .timeout(TIMEOUT)
         .json(&body)
         .map_err(net_err)?
         .send()
@@ -69,6 +94,7 @@ pub async fn register(username: &str, password: &str) -> Result<String, String> 
 pub async fn me(token: &str) -> Result<User, String> {
     let resp = Request::get(&format!("{BASE}/me"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .send()
         .await
         .map_err(net_err)?;
@@ -85,7 +111,7 @@ pub async fn search_books(keyword: &str, page: i32) -> Result<BookListResponse, 
 
     if kw.is_empty() {
         let url = format!("{BASE}/books?page={page}&limit=9");
-        let resp = Request::get(&url).send().await.map_err(net_err)?;
+        let resp = Request::get(&url).timeout(TIMEOUT).send().await.map_err(net_err)?;
         if resp.ok() {
             let text = resp.text().await.map_err(net_err)?;
             serde_json::from_str(&text).map_err(|e| format!("解析失败：{e}"))
@@ -94,7 +120,7 @@ pub async fn search_books(keyword: &str, page: i32) -> Result<BookListResponse, 
         }
     } else {
         let url = format!("{BASE}/books/search?q={}", urlencoding::encode(kw));
-        let resp = Request::get(&url).send().await.map_err(net_err)?;
+        let resp = Request::get(&url).timeout(TIMEOUT).send().await.map_err(net_err)?;
         if resp.ok() {
             let text = resp.text().await.map_err(net_err)?;
             let books: Vec<Book> =
@@ -123,6 +149,7 @@ pub async fn create_book(
         json!({ "name": name, "author": author, "description": description, "total": total });
     let resp = Request::post(&format!("{BASE}/books"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .json(&body)
         .map_err(net_err)?
         .send()
@@ -147,6 +174,7 @@ pub async fn update_book(
         json!({ "name": name, "author": author, "description": description, "total": total });
     let resp = Request::put(&format!("{BASE}/books/{id}"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .json(&body)
         .map_err(net_err)?
         .send()
@@ -169,6 +197,7 @@ pub async fn update_profile(
     let body = json!({ "old_password": old_password, "username": username, "password": password });
     let resp = Request::put(&format!("{BASE}/users/{user_id}"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .json(&body)
         .map_err(net_err)?
         .send()
@@ -184,6 +213,7 @@ pub async fn update_profile(
 pub async fn self_delete(token: &str, user_id: i32) -> Result<String, String> {
     let resp = Request::delete(&format!("{BASE}/users/{user_id}"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .send()
         .await
         .map_err(net_err)?;
@@ -205,6 +235,7 @@ pub async fn self_delete(token: &str, user_id: i32) -> Result<String, String> {
 pub async fn delete_book(token: &str, id: i32) -> Result<String, String> {
     let resp = Request::delete(&format!("{BASE}/books/{id}"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .send()
         .await
         .map_err(net_err)?;
@@ -219,6 +250,7 @@ pub async fn borrow_book(token: &str, user_id: i32, book_id: i32) -> Result<Stri
     let body = json!({ "user_id": user_id, "book_id": book_id });
     let resp = Request::post(&format!("{BASE}/borrow"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .json(&body)
         .map_err(net_err)?
         .send()
@@ -234,6 +266,7 @@ pub async fn borrow_book(token: &str, user_id: i32, book_id: i32) -> Result<Stri
 pub async fn list_users(token: &str) -> Result<Vec<UserBrief>, String> {
     let resp = Request::get(&format!("{BASE}/users"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .send()
         .await
         .map_err(net_err)?;
@@ -249,6 +282,7 @@ pub async fn set_permission(token: &str, user_id: i32, permission: &str) -> Resu
     let body = json!({ "permission": permission });
     let resp = Request::put(&format!("{BASE}/users/{user_id}/permission"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .json(&body)
         .map_err(net_err)?
         .send()
@@ -264,6 +298,7 @@ pub async fn set_permission(token: &str, user_id: i32, permission: &str) -> Resu
 pub async fn admin_delete_user(token: &str, user_id: i32) -> Result<String, String> {
     let resp = Request::delete(&format!("{BASE}/users/{user_id}"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .send()
         .await
         .map_err(net_err)?;
@@ -277,6 +312,7 @@ pub async fn admin_delete_user(token: &str, user_id: i32) -> Result<String, Stri
 pub async fn list_borrowed(token: &str) -> Result<Vec<BorrowRecord>, String> {
     let resp = Request::get(&format!("{BASE}/admin/borrowed"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .send()
         .await
         .map_err(net_err)?;
@@ -292,6 +328,7 @@ pub async fn return_book(token: &str, user_id: i32, book_id: i32) -> Result<Stri
     let body = json!({ "user_id": user_id, "book_id": book_id });
     let resp = Request::post(&format!("{BASE}/return"))
         .header("Authorization", &bearer(token))
+        .timeout(TIMEOUT)
         .json(&body)
         .map_err(net_err)?
         .send()

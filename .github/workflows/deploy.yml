@@ -73,8 +73,8 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=firechickenmp4/library-system:cache
+          cache-to: type=registry,ref=firechickenmp4/library-system:cache,mode=max
 
       - name: Extract SHA tag
         id: tag
@@ -121,8 +121,8 @@ jobs:
           file: Dockerfile.caddy
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=firechickenmp4/lib-caddy:cache
+          cache-to: type=registry,ref=firechickenmp4/lib-caddy:cache,mode=max
 
       - name: Extract SHA tag
         id: tag
@@ -160,13 +160,18 @@ jobs:
           script: |
             cd ~/lib-system
 
-            TAG_BACKEND=${{ needs.backend.outputs.sha_tag || 'latest' }}
-            TAG_CADDY=${{ needs.caddy.outputs.sha_tag || 'latest' }}
+            SHA="${{ github.sha }}" && SHA="${SHA::7}"
+            TAG_BACKEND=${{ needs.backend.outputs.sha_tag || '' }}
+            TAG_CADDY=${{ needs.caddy.outputs.sha_tag || '' }}
 
-            echo "Pulling images (backend=$TAG_BACKEND, caddy=$TAG_CADDY)"
+            # 取第一个可用的 tag: job output → commit SHA → latest
+            [ -z "$TAG_BACKEND" ] && TAG_BACKEND="$SHA"
+            TAG=$TAG_BACKEND docker compose pull app || { TAG_BACKEND=latest; TAG=latest docker compose pull app; }
 
-            TAG=$TAG_BACKEND docker compose pull app
-            TAG=$TAG_CADDY docker compose pull caddy
+            [ -z "$TAG_CADDY" ] && TAG_CADDY="$SHA"
+            TAG=$TAG_CADDY docker compose pull caddy || { TAG_CADDY=latest; TAG=latest docker compose pull caddy; }
+
+            echo "Deploying (backend=$TAG_BACKEND, caddy=$TAG_CADDY)"
 
             TAG=$TAG_BACKEND docker compose up -d app
             TAG=$TAG_CADDY docker compose up -d caddy

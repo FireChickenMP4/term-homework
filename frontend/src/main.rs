@@ -45,8 +45,19 @@ fn App() -> Element {
         let mut auth = auth;
         if let Some(token) = auth.token_value() {
             spawn(async move {
+                let token = match api::refresh(&token).await {
+                    Ok(new_token) => {
+                        // 保存续期后的 token，前端不感知
+                        new_token
+                    }
+                    Err(_) => {
+                        // refresh 也失败（token 彻底过期），清除登录态
+                        auth.logout();
+                        return;
+                    }
+                };
                 match api::me(&token).await {
-                    Ok(user) => auth.set_user(user),
+                    Ok(user) => auth.set_session(token, user),
                     Err(_) => auth.logout(),
                 }
             });
