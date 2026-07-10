@@ -1,4 +1,8 @@
-http://www.firechickenmp4.top {
+{
+    email admin@firechickenmp4.top
+}
+
+www.firechickenmp4.top {
     rate_limit {
         zone dynamic {
             key {remote_host}
