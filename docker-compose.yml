@@ -29,11 +29,11 @@ services:
       DB_USER: ${DB_USER:-lib}
       DB_PASSWORD: ${DB_PASSWORD:-lib}
     healthcheck:
-      test: ["CMD-SHELL", "pidof library-server || exit 1"]
+      test: ["CMD-SHELL", "cat /proc/net/tcp | grep -q 2270 || exit 1"]
       interval: 5s
       timeout: 3s
-      retries: 3
-      start_period: 10s
+      retries: 5
+      start_period: 30s
     ports:
       - "8808:8808"
     restart: unless-stopped
@@ -43,6 +43,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       app:
         condition: service_started
@@ -56,3 +60,5 @@ services:
 
 volumes:
   mysql_data:
+  caddy_data:
+  caddy_config:
