@@ -41,7 +41,7 @@ jobs:
 
   backend:
     needs: [ changes ]
-    if: ${{ (github.event_name == 'workflow_dispatch' && !github.event.inputs.deploy_only) || needs.changes.outputs.backend == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       sha_tag: ${{ steps.tag.outputs.sha_tag }}
