@@ -17,7 +17,6 @@ services:
     restart: unless-stopped
 
   app:
-    build: .
     image: firechickenmp4/library-system:${TAG:-latest}
     depends_on:
       db:
@@ -40,9 +39,6 @@ services:
     restart: unless-stopped
 
   caddy:
-    build:
-      context: .
-      dockerfile: Dockerfile.caddy
     image: firechickenmp4/lib-caddy:${TAG:-latest}
     ports:
       - "80:80"
