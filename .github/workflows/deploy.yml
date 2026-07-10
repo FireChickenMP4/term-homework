@@ -32,7 +32,6 @@ jobs:
               - Dockerfile
               - docker-entrypoint.sh
               - config.docker.json
-              - .github/workflows/deploy.yml
             frontend:
               - frontend/**
               - Dockerfile.caddy
