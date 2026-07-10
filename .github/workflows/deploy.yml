@@ -173,6 +173,11 @@ jobs:
 
             echo "Deploying (backend=$TAG_BACKEND, caddy=$TAG_CADDY)"
 
+            # 修复 MySQL 用户认证插件（caching_sha2_password → mysql_native_password）
+            docker compose exec -T db mysql -u root -proot \
+              -e "ALTER USER IF EXISTS '${DB_USER:-lib}'@'%' IDENTIFIED WITH mysql_native_password BY '${DB_PASSWORD:-lib}'; FLUSH PRIVILEGES;" \
+              2>/dev/null || true
+
             TAG=$TAG_BACKEND docker compose up -d app
             TAG=$TAG_CADDY docker compose up -d caddy
             docker image prune -f
