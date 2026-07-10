@@ -7,12 +7,13 @@ www.firechickenmp4.top {
         }
     }
 
-    @api {
-        path /api/*
+    handle /api/* {
+        reverse_proxy app:8808
     }
-    reverse_proxy @api app:8808
 
-    root * /usr/share/caddy
-    try_files {path} /index.html
-    file_server
+    handle {
+        root * /usr/share/caddy
+        try_files {path} /index.html
+        file_server
+    }
 }

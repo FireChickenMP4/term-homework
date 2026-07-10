@@ -29,9 +29,9 @@ services:
       DB_USER: ${DB_USER:-lib}
       DB_PASSWORD: ${DB_PASSWORD:-lib}
     healthcheck:
-      test: ["CMD-SHELL", "cat /proc/net/tcp | grep -q 2270 || exit 1"]
-      interval: 5s
-      timeout: 3s
+      test: ["CMD", "curl", "-f", "http://localhost:8808/api/health"]
+      interval: 10s
+      timeout: 5s
       retries: 5
       start_period: 30s
     ports:
