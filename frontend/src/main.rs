@@ -48,12 +48,8 @@ fn App() -> Element {
         let mut auth = auth;
         if let Some(token) = auth.token_value() {
             spawn(async move {
-                let token = match api::refresh(&token).await {
-                    Ok(new_token) => new_token,
-                    Err(_) => token,
-                };
                 match api::me(&token).await {
-                    Ok(user) => auth.set_session(token, user),
+                    Ok(user) => auth.set_user(user),
                     Err(_) => auth.logout(),
                 }
             });

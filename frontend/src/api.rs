@@ -52,26 +52,6 @@ pub async fn login(username: &str, password: &str) -> Result<String, String> {
     }
 }
 
-pub async fn refresh(token: &str) -> Result<String, String> {
-    let resp = Request::post(&format!("{BASE}/refresh"))
-        .header("Authorization", &bearer(token))
-        
-        .send()
-        .await
-        .map_err(net_err)?;
-    if resp.ok() {
-        let text = resp.text().await.map_err(net_err)?;
-        let v: serde_json::Value =
-            serde_json::from_str(&text).map_err(|e| format!("解析失败：{e}"))?;
-        v.get("token")
-            .and_then(|t| t.as_str())
-            .map(|s| s.to_string())
-            .ok_or_else(|| "响应缺少 token".into())
-    } else {
-        Err(parse_error(resp).await)
-    }
-}
-
 pub async fn register(username: &str, password: &str) -> Result<String, String> {
     let body = json!({ "username": username, "password": password });
     let resp = Request::post(&format!("{BASE}/register"))
