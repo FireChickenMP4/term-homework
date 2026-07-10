@@ -147,7 +147,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          source: "docker-compose.yml,Caddyfile"
+          source: "docker-compose.yml,Caddyfile,icp.html"
           target: ~/lib-system/
           strip_components: 0
 
