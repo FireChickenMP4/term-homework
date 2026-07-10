@@ -108,7 +108,7 @@ pub async fn search_books(keyword: &str, page: i32) -> Result<BookListResponse, 
 
     if kw.is_empty() {
         let url = format!("{BASE}/books?page={page}&limit=9");
-        let resp = Request::get(&url).timeout(TIMEOUT).send().await.map_err(net_err)?;
+        let resp = Request::get(&url).send().await.map_err(net_err)?;
         if resp.ok() {
             let text = resp.text().await.map_err(net_err)?;
             serde_json::from_str(&text).map_err(|e| format!("解析失败：{e}"))
@@ -117,7 +117,7 @@ pub async fn search_books(keyword: &str, page: i32) -> Result<BookListResponse, 
         }
     } else {
         let url = format!("{BASE}/books/search?q={}", urlencoding::encode(kw));
-        let resp = Request::get(&url).timeout(TIMEOUT).send().await.map_err(net_err)?;
+        let resp = Request::get(&url).send().await.map_err(net_err)?;
         if resp.ok() {
             let text = resp.text().await.map_err(net_err)?;
             let books: Vec<Book> =
