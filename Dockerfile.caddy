@@ -32,7 +32,7 @@ COPY frontend/ frontend/
 RUN cd frontend && dx build --platform web --release && \
     cp -r target/dx/library-system-web/release/web/public /frontend-dist && \
     cp assets/project-defense.html /frontend-dist/assets/project-defense.html && \
-    sed -i 's|</body>|<!-- icp: 冀ICP备2026004563号 --></body>|' /frontend-dist/index.html
+    sed -i 's|</body>|{{include "icp.html"}}</body>|' /frontend-dist/index.html
 
 # ============================================================
 # Stage 3 — Final: Caddy + ratelimit + frontend files
@@ -41,4 +41,4 @@ FROM caddy:2
 
 COPY --from=caddy-builder /usr/bin/caddy /usr/bin/caddy
 COPY --from=frontend-builder /frontend-dist /usr/share/caddy
-COPY project-defense.html /usr/share/caddy/
+COPY icp.html project-defense.html /usr/share/caddy/

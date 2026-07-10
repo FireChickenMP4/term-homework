@@ -25,5 +25,8 @@ www.firechickenmp4.top {
         root * /usr/share/caddy
         try_files {path} /index.html
         file_server
+        templates {
+            match index.html
+        }
     }
 }
