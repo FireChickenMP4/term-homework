@@ -30,7 +30,9 @@ RUN mkdir frontend/src && echo "fn main() {}" > frontend/src/main.rs && \
 # 再复制源码，只编译项目自身代码
 COPY frontend/ frontend/
 RUN cd frontend && dx build --platform web --release && \
-    cp -r target/dx/library-system-web/release/web/public /frontend-dist
+    cp -r target/dx/library-system-web/release/web/public /frontend-dist && \
+    cp assets/project-defense.html /frontend-dist/assets/project-defense.html && \
+    sed -i 's|</body>|<!-- icp: 冀ICP备2026004563号 --></body>|' /frontend-dist/index.html
 
 # ============================================================
 # Stage 3 — Final: Caddy + ratelimit + frontend files
