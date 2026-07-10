@@ -4,15 +4,23 @@ set -e
 echo "=== Library Management System ==="
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 export PATH="$HOME/.cargo/bin:$PATH"
-export http_proxy=http://172.29.0.1:18800
-export https_proxy=http://172.29.0.1:18800
 
-# 1. 检查 MySQL
+# 1. 启动 MySQL（优先本地，否则 Docker）
 if mysqladmin ping -u root --silent 2>/dev/null; then
   echo "[1] MySQL 已在运行"
 else
-  echo "[1] 启动 MySQL..."
-  sudo service mysql start 2>/dev/null || sudo mysqld_safe --skip-syslog &
+  if command -v mysqld_safe &>/dev/null; then
+    echo "[1] 启动本地 MySQL..."
+    sudo mysqld_safe --skip-syslog &
+  elif command -v service &>/dev/null && service mysql status &>/dev/null; then
+    echo "[1] 启动本地 MySQL..."
+    sudo service mysql start
+  else
+    echo "[1] 通过 Docker 启动 MySQL..."
+    cd "$ROOT_DIR"
+    docker compose up -d db --wait
+  fi
+  echo "  等待 MySQL 就绪..."
   for i in $(seq 1 30); do
     if mysqladmin ping -u root --silent 2>/dev/null; then
       echo "  MySQL 已就绪"
@@ -31,6 +39,7 @@ else
   cd "$ROOT_DIR/frontend"
   dx build --platform web --release --verbose 2>&1 | grep -E "(error|warning:|Compiled|Client build)"
   cp -r "$ROOT_DIR/frontend/target/dx/library-system-web/release/web/public" "$ROOT_DIR/frontend/dist"
+  cp assets/project-defense.html "$ROOT_DIR/frontend/dist/assets/project-defense.html"
 fi
 
 # 3. 构建后端（检测源码变更）

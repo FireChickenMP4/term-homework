@@ -40,7 +40,7 @@ echo "=== Library Management System ==="
 echo "[1] 检查 MySQL..."
 if ! mysqladmin ping -u root --silent 2>/dev/null; then
   echo "  启动 MySQL..."
-  sudo service mysql start 2>/dev/null || sudo mysqld_safe --skip-syslog &
+  docker compose up -d db --wait 2>/dev/null || sudo service mysql start 2>/dev/null || sudo mysqld_safe --skip-syslog &
   for i in $(seq 1 30); do
     mysqladmin ping -u root --silent 2>/dev/null && echo "  MySQL 已就绪" && break
     sleep 1

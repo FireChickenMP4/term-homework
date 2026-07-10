@@ -25,7 +25,7 @@ testjwt:
 	./build_tests/test_jwt
 
 db:
-	sudo service mysql start 2>/dev/null || sudo mysqld_safe --skip-syslog &
+	docker compose up -d db --wait 2>/dev/null || sudo service mysql start 2>/dev/null || sudo mysqld_safe --skip-syslog &
 
 clean:
 	rm -rf build build_tests frontend/dist
