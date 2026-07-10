@@ -164,21 +164,22 @@ jobs:
             TAG_BACKEND=${{ needs.backend.outputs.sha_tag || '' }}
             TAG_CADDY=${{ needs.caddy.outputs.sha_tag || '' }}
 
-            # backend 有构建才拉新镜像，否则保持现有容器
+            # backend 有构建才拉新镜像并重启全部服务
             if [ -n "$TAG_BACKEND" ]; then
-              docker pull firechickenmp4/library-system:"$TAG_BACKEND" || { TAG_BACKEND=latest; docker pull firechickenmp4/library-system:latest; }
-              docker tag firechickenmp4/library-system:"$TAG_BACKEND" firechickenmp4/library-system:latest 2>/dev/null || true
-              TAG=$TAG_BACKEND docker compose up -d app
+              docker pull firechickenmp4/library-system:"$TAG_BACKEND" && \
+                docker tag firechickenmp4/library-system:"$TAG_BACKEND" firechickenmp4/library-system:latest
+              docker compose pull db
+              docker compose up -d
             else
               echo "Backend unchanged, skipping"
             fi
 
-            # caddy 同理
-            if [ -n "$TAG_CADDY" ]; then
-              docker pull firechickenmp4/lib-caddy:"$TAG_CADDY" || { TAG_CADDY=latest; docker pull firechickenmp4/lib-caddy:latest; }
-              docker tag firechickenmp4/lib-caddy:"$TAG_CADDY" firechickenmp4/lib-caddy:latest 2>/dev/null || true
-              TAG=$TAG_CADDY docker compose up -d caddy
-            else
+            # 只有 caddy 有构建（前端变动），只重启 caddy
+            if [ -n "$TAG_CADDY" ] && [ -z "$TAG_BACKEND" ]; then
+              docker pull firechickenmp4/lib-caddy:"$TAG_CADDY" && \
+                docker tag firechickenmp4/lib-caddy:"$TAG_CADDY" firechickenmp4/lib-caddy:latest
+              docker compose up -d caddy
+            elif [ -z "$TAG_CADDY" ]; then
               echo "Caddy unchanged, skipping"
             fi
 
