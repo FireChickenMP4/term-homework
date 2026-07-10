@@ -32,19 +32,16 @@ services:
     restart: unless-stopped
 
   caddy:
-    image: firechickenmp4/my-caddy-with-ratelimit
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+    image: firechickenmp4/lib-caddy
     ports:
       - "80:80"
       - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
     depends_on:
       - app
     restart: unless-stopped
 
 volumes:
   mysql_data:
-  caddy_data:
-  caddy_config:

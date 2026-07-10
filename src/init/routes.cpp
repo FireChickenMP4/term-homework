@@ -11,7 +11,7 @@ namespace Routes
 {
     void registerRoutes(drogon::HttpAppFramework &app)
     {
-        app.registerHandler("/health", [](const drogon::HttpRequestPtr &req,
+        app.registerHandler("/api/health", [](const drogon::HttpRequestPtr &req,
                                           std::function<void(const drogon::HttpResponsePtr &)> &&callback)
                             {
             auto resp = drogon::HttpResponse::newHttpResponse();
@@ -19,7 +19,7 @@ namespace Routes
             callback(resp); });
 
         // CORS preflight
-        app.registerHandler("/*",
+        app.registerHandler("/api/*",
                             [](const drogon::HttpRequestPtr &,
                                std::function<void(const drogon::HttpResponsePtr &)> &&callback)
                             {

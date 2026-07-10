@@ -5,7 +5,7 @@
 
 void registerBookRoutes(drogon::HttpAppFramework &app)
 {
-    app.registerHandler("/books/search",
+    app.registerHandler("/api/books/search",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)
                         {
@@ -27,7 +27,7 @@ void registerBookRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Get});
 
-    app.registerHandler("/books",
+    app.registerHandler("/api/books",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)
                         {
@@ -56,7 +56,7 @@ void registerBookRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Get});
 
-    app.registerHandler("/books/{id}",
+    app.registerHandler("/api/books/{id}",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb, int id)
                         {
@@ -79,7 +79,7 @@ void registerBookRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Get});
 
-    app.registerHandler("/books",
+    app.registerHandler("/api/books",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)
                         {
@@ -96,7 +96,7 @@ void registerBookRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Post, "AuthFilter"});
 
-    app.registerHandler("/books/{id}",
+    app.registerHandler("/api/books/{id}",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb, int id)
                         {
@@ -110,7 +110,7 @@ void registerBookRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Put, "AuthFilter"});
 
-    app.registerHandler("/books/{id}",
+    app.registerHandler("/api/books/{id}",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb, int id)
                         {

@@ -1,3 +1,18 @@
 www.firechickenmp4.top {
-    reverse_proxy app:8808
+    rate_limit {
+        zone dynamic {
+            key {remote_host}
+            events 100
+            window 1m
+        }
+    }
+
+    @api {
+        path /api/*
+    }
+    reverse_proxy @api app:8808
+
+    root * /usr/share/caddy
+    try_files {path} /index.html
+    file_server
 }

@@ -1,0 +1,26 @@
+# ============================================================
+# Stage 1 — Build frontend WASM
+# ============================================================
+FROM rust:slim-bookworm AS frontend-builder
+
+RUN apt-get update && apt-get install -y \
+    curl pkg-config libssl-dev binaryen \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSLo /usr/local/bin/dx \
+    "https://github.com/DioxusLabs/dioxus/releases/latest/download/dx-x86_64-unknown-linux-gnu" \
+    && chmod +x /usr/local/bin/dx \
+    || cargo install dioxus-cli --locked
+
+WORKDIR /app
+COPY frontend/ frontend/
+
+RUN cd frontend && dx build --platform web --release && \
+    cp -r target/dx/library-system-web/release/web/public /frontend-dist
+
+# ============================================================
+# Stage 2 — 基于你已有的 Caddy 镜像加前端文件
+# ============================================================
+FROM firechickenmp4/my-caddy-with-ratelimit
+
+COPY --from=frontend-builder /frontend-dist /usr/share/caddy

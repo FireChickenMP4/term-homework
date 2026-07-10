@@ -20,7 +20,7 @@ WORKDIR /app
 # ============================================================
 # Stage 2 — Build backend (C++ / Drogon)
 # ============================================================
-FROM ubuntu:22.04 AS backend-builder
+FROM ubuntu:22.04 AS backend
 
 COPY --from=drogon-builder /usr/local /usr/local
 
@@ -37,27 +37,7 @@ RUN cmake -B build -S . -DCMAKE_BUILD_TYPE=Release \
     && cp build/src/main /library-server
 
 # ============================================================
-# Stage 3 — Build frontend (Rust / Dioxus WASM)
-# ============================================================
-FROM rust:slim-bookworm AS frontend-builder
-
-RUN apt-get update && apt-get install -y \
-    pkg-config libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/usr/local/cargo/git \
-    cargo install dioxus-cli --locked
-
-WORKDIR /app
-COPY frontend/ frontend/
-
-RUN sed -i 's|http://localhost:8808||' frontend/src/api.rs
-RUN cd frontend && dx build --platform web --release
-RUN cp -r frontend/target/dx/library-system-web/release/web/public /frontend-dist
-
-# ============================================================
-# Stage 4 — Runtime image
+# Stage 3 — Runtime image
 # ============================================================
 FROM ubuntu:22.04 AS runtime
 
@@ -65,9 +45,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates libjsoncpp-dev libmysqlclient-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=backend-builder /library-server /app/
-COPY --from=drogon-builder /usr/local/lib /usr/local/lib/
-COPY --from=frontend-builder /frontend-dist /app/frontend/dist
+COPY --from=backend /library-server /app/
 COPY docker-entrypoint.sh /app/
 COPY config.docker.json /app/config.json
 

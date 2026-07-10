@@ -3,7 +3,7 @@ use serde_json::json;
 
 use crate::models::{Book, BookListResponse, BorrowRecord, User, UserBrief};
 
-pub const BASE: &str = "http://localhost:8808";
+pub const BASE: &str = "/api";
 
 fn bearer(token: &str) -> String {
     format!("Bearer {token}")

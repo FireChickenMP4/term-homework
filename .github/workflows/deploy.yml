@@ -10,34 +10,38 @@ on:
         type: boolean
         default: false
 
-env:
-  DOCKER_IMAGE: firechickenmp4/library-system
-
 jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      build: ${{ steps.build-changes.outputs.any_changed }}
+      backend: ${{ steps.check.outputs.backend_any_changed }}
+      frontend: ${{ steps.check.outputs.frontend_any_changed }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Check build changes
-        id: build-changes
+      - name: Check changed files
+        id: check
         uses: tj-actions/changed-files@v44
         with:
-          files: |
-            src/**
-            frontend/**
-            CMakeLists.txt
-            Dockerfile
-            .dockerignore
-            .github/workflows/deploy.yml
+          files_yaml: |
+            backend:
+              - src/**
+              - CMakeLists.txt
+              - Dockerfile
+              - docker-entrypoint.sh
+              - config.docker.json
+              - .github/workflows/deploy.yml
+            frontend:
+              - frontend/**
+              - Dockerfile.caddy
+              - Caddyfile
+              - .github/workflows/deploy.yml
 
-  build:
+  backend:
     needs: [ changes ]
-    if: ${{ needs.changes.outputs.build == 'true' || (github.event_name == 'workflow_dispatch' && !github.event.inputs.deploy_only) }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && !github.event.inputs.deploy_only) || needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +50,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.DOCKER_IMAGE }}
+          images: firechickenmp4/library-system
           tags: |
             type=sha,prefix=
             type=raw,value=latest
@@ -69,20 +73,55 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
-    needs: [ changes, build ]
-    if: ${{ !cancelled() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+  caddy:
+    needs: [ changes ]
+    if: ${{ (github.event_name == 'workflow_dispatch' && !github.event.inputs.deploy_only) || needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Sync compose & caddy config
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: firechickenmp4/lib-caddy
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          dockerfile: Dockerfile.caddy
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: [ changes, backend, caddy ]
+    if: ${{ !cancelled() && (needs.backend.result == 'success' || needs.backend.result == 'skipped') && (needs.caddy.result == 'success' || needs.caddy.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync config
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          source: "docker-compose.yml,Caddyfile"
+          source: "docker-compose.yml"
           target: "~/lib-system/"
           strip_components: 0
 

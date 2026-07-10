@@ -6,7 +6,7 @@
 void registerLibRoutes(drogon::HttpAppFramework &app)
 {
     // 管理后台查看全部借阅记录（前端 SPA 用 /borrowed 显示个人借阅）
-    app.registerHandler("/admin/borrowed",
+    app.registerHandler("/api/admin/borrowed",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)
                         {
@@ -14,7 +14,7 @@ void registerLibRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Get, "AdminFilter"});
 
-    app.registerHandler("/borrow",
+    app.registerHandler("/api/borrow",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)
                         {
@@ -32,7 +32,7 @@ void registerLibRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Post, "AuthFilter"});
 
-    app.registerHandler("/return",
+    app.registerHandler("/api/return",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)
                         {
@@ -50,7 +50,7 @@ void registerLibRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Post, "AuthFilter"});
 
-    app.registerHandler("/users/{id}/books",
+    app.registerHandler("/api/users/{id}/books",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb, int id)
                         {

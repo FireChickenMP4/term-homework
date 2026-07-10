@@ -6,7 +6,7 @@
 
 void registerUserRoutes(drogon::HttpAppFramework &app)
 {
-    app.registerHandler("/login",
+    app.registerHandler("/api/login",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)
                         {
@@ -36,7 +36,7 @@ void registerUserRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Post});
     // ── /me (get current user with borrowed books) ──
-    app.registerHandler("/me",
+    app.registerHandler("/api/me",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)
                         {
@@ -68,7 +68,7 @@ void registerUserRoutes(drogon::HttpAppFramework &app)
                         {drogon::Get, "AuthFilter"});
 
     // ── /register (create user, return success message) ──
-    app.registerHandler("/register",
+    app.registerHandler("/api/register",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)
                         {
@@ -106,7 +106,7 @@ void registerUserRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Post});
 
-    app.registerHandler("/users",
+    app.registerHandler("/api/users",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)
                         {
@@ -124,7 +124,7 @@ void registerUserRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Get, "AdminFilter"});
 
-    app.registerHandler("/users/{id}",
+    app.registerHandler("/api/users/{id}",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb, int id)
                         {
@@ -150,7 +150,7 @@ void registerUserRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Get, "AuthFilter"});
 
-    app.registerHandler("/users/{id}",
+    app.registerHandler("/api/users/{id}",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb, int id)
                         {
@@ -179,7 +179,7 @@ void registerUserRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Put, "AuthFilter"});
 
-    app.registerHandler("/users/{id}/permission",
+    app.registerHandler("/api/users/{id}/permission",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb, int id)
                         {
@@ -218,7 +218,7 @@ void registerUserRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Put, "AdminFilter"});
 
-    app.registerHandler("/users/{id}",
+    app.registerHandler("/api/users/{id}",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb, int id)
                         {
@@ -268,7 +268,7 @@ void registerUserRoutes(drogon::HttpAppFramework &app)
                         },
                         {drogon::Delete, "AuthFilter"});
 
-    app.registerHandler("/users",
+    app.registerHandler("/api/users",
                         [](const drogon::HttpRequestPtr &req,
                            std::function<void(const drogon::HttpResponsePtr &)> &&cb)
                         {
