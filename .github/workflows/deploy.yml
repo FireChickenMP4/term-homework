@@ -41,7 +41,7 @@ jobs:
 
   backend:
     needs: [ changes ]
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && !github.event.inputs.deploy_only) || needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       sha_tag: ${{ steps.tag.outputs.sha_tag }}
@@ -164,20 +164,25 @@ jobs:
             TAG_BACKEND=${{ needs.backend.outputs.sha_tag || '' }}
             TAG_CADDY=${{ needs.caddy.outputs.sha_tag || '' }}
 
-            # 取第一个可用的 tag: job output → commit SHA → latest
-            [ -z "$TAG_BACKEND" ] && TAG_BACKEND="$SHA"
-            TAG=$TAG_BACKEND docker compose pull app || { TAG_BACKEND=latest; TAG=latest docker compose pull app; }
+            # backend 有构建才拉新镜像，否则保持现有容器
+            if [ -n "$TAG_BACKEND" ]; then
+              TAG=$TAG_BACKEND docker compose pull app || { TAG_BACKEND=latest; TAG=latest docker compose pull app; }
+              TAG=$TAG_BACKEND docker compose up -d app
+            else
+              echo "Backend unchanged, skipping"
+            fi
 
-            [ -z "$TAG_CADDY" ] && TAG_CADDY="$SHA"
-            TAG=$TAG_CADDY docker compose pull caddy || { TAG_CADDY=latest; TAG=latest docker compose pull caddy; }
-
-            echo "Deploying (backend=$TAG_BACKEND, caddy=$TAG_CADDY)"
+            # caddy 同理
+            if [ -n "$TAG_CADDY" ]; then
+              TAG=$TAG_CADDY docker compose pull caddy || { TAG_CADDY=latest; TAG=latest docker compose pull caddy; }
+              TAG=$TAG_CADDY docker compose up -d caddy
+            else
+              echo "Caddy unchanged, skipping"
+            fi
 
             # 修复 MySQL 用户认证插件（caching_sha2_password → mysql_native_password）
             docker compose exec -T db mysql -u root -proot \
               -e "ALTER USER IF EXISTS '${DB_USER:-lib}'@'%' IDENTIFIED WITH mysql_native_password BY '${DB_PASSWORD:-lib}'; FLUSH PRIVILEGES;" \
               2>/dev/null || true
 
-            TAG=$TAG_BACKEND docker compose up -d app
-            TAG=$TAG_CADDY docker compose up -d caddy
             docker image prune -f
